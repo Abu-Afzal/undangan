@@ -92,6 +92,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    // Tambahkan import Auth untuk memantau status login Admin
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
@@ -106,75 +108,84 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app); // Inisialisasi Auth
 
     const userListContainer = document.getElementById("user-list");
     const countBadge = document.getElementById("count-badge");
 
-    // MEMBACA DARI PATH 'users'
-    const usersRef = ref(db, 'users');
-    
-    onValue(usersRef, (snapshot) => {
-        userListContainer.innerHTML = "";
-        let pendingCount = 0;
+    // TENTUKAN UID ADMIN ANDA DI SINI
+    const ADMIN_UID = "UID_AKUN_ADMIN_ANDA_DI_SINI"; 
 
-        if (!snapshot.exists()) {
-            tampilkanStatusKosong();
-            return;
-        }
-
-        snapshot.forEach((childSnapshot) => {
-            const uid = childSnapshot.key;
-            const userData = childSnapshot.val();
-
-            // PERBAIKAN LOGIKA: Jika isApproved bernilai false ATAU belum diset (undefined), tampilkan di antrean
-            if (userData.isApproved === false || userData.isApproved === undefined) {
-                pendingCount++;
-                
-                const card = document.createElement("div");
-                card.className = "user-card";
-                card.innerHTML = `
-                    <div class="user-info">
-                        <p class="email">${userData.email || 'Tanpa Email'}</p>
-                        <p class="uid">UID: ${uid}</p>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-delete" onclick="hapusUser('${uid}', '${userData.email || ''}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn-approve" onclick="setujuiUser('${uid}', '${userData.email || ''}')"><i class="fas fa-check"></i> Setujui</button>
-                    </div>
-                `;
-                userListContainer.appendChild(card);
-            }
-        });
-
-        countBadge.innerText = `${pendingCount} Menunggu Persetujuan`;
-        
-        if (pendingCount === 0) {
-            tampilkanStatusKosong();
+    // PROTEKSI HALAMAN ADMIN: Cek status login secara real-time
+    onAuthStateChanged(auth, (user) => {
+        if (user && user.uid === ADMIN_UID) {
+            // Jika benar admin yang masuk, jalankan penarikan data database
+            muatDataAntrean();
+        } else {
+            // Jika tidak login atau bukan admin, tendang kembali ke halaman utama
+            alert("Akses Ditolak! Anda harus login sebagai Admin.");
+            window.location.href = "index.html"; // Arahkan ke halaman login Anda
         }
     });
+
+    // FUNGSI UTAMA MEMBACA DATA ANTREAN
+    function muatDataAntrean() {
+        const usersRef = ref(db, 'users');
+        onValue(usersRef, (snapshot) => {
+            userListContainer.innerHTML = "";
+            let pendingCount = 0;
+
+            if (!snapshot.exists()) {
+                tampilkanStatusKosong();
+                return;
+            }
+
+            snapshot.forEach((childSnapshot) => {
+                const uid = childSnapshot.key;
+                const userData = childSnapshot.val();
+
+                if (userData.isApproved === false || userData.isApproved === undefined) {
+                    pendingCount++;
+                    
+                    const card = document.createElement("div");
+                    card.className = "user-card";
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <p class="email">${userData.email || 'Tanpa Email'}</p>
+                            <p class="uid">UID: ${uid}</p>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-delete" onclick="hapusUser('${uid}', '${userData.email || ''}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn-approve" onclick="setujuiUser('${uid}', '${userData.email || ''}')"><i class="fas fa-check"></i> Setujui</button>
+                        </div>
+                    `;
+                    userListContainer.appendChild(card);
+                }
+            });
+
+            countBadge.innerText = `${pendingCount} Menunggu Persetujuan`;
+            if (pendingCount === 0) tampilkanStatusKosong();
+        });
+    }
 
     function tampilkanStatusKosong() {
         userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#2e7d32"></i><br><br>Semua akun sudah aktif! Tidak ada pendaftar baru.</div>';
         countBadge.innerText = "0 Antrean";
     }
 
-    // FUNGSI GLOBAL UNTUK TOMBOL APPROVE
+    // TOMBOL APPROVE
     window.setujuiUser = (uid, email) => {
-        const targetEmail = email || "Pengguna Baru";
-        if(confirm(`Setujui akun ${targetEmail} agar bisa langsung masuk ke aplikasi?`)) {
-            const userRef = ref(db, `users/${uid}`);
-            update(userRef, { isApproved: true })
+        if(confirm(`Setujui akun ${email || 'ini'} agar bisa langsung masuk ke aplikasi?`)) {
+            update(ref(db, `users/${uid}`), { isApproved: true })
             .then(() => alert("Akun berhasil diaktifkan!"))
             .catch((err) => alert("Gagal menyetujui: " + err.message));
         }
     };
 
-    // FUNGSI GLOBAL UNTUK TOMBOL HAPUS
+    // TOMBOL HAPUS
     window.hapusUser = (uid, email) => {
-        const targetEmail = email || "Pengguna Baru";
-        if(confirm(`Hapus ${targetEmail} dari daftar antrean?`)) {
-            const userRef = ref(db, `users/${uid}`);
-            remove(userRef)
+        if(confirm(`Hapus ${email || 'pendaftar ini'} dari daftar antrean?`)) {
+            remove(ref(db, `users/${uid}`))
             .then(() => alert("Pendaftar telah berhasil dihapus."))
             .catch((err) => alert("Gagal menghapus: " + err.message));
         }
