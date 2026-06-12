@@ -3,71 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - Aplikasi Catatan Undangan Digital</title>
-    <link rel="stylesheet" href="style.css"> </head>
-<body>
-
-<div class="auth-container">
-    <div class="overlay-status" id="overlayStatus">
-        <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
-        <h3>Pendaftaran Berhasil!</h3>
-        <p>Akun Anda sedang dalam antrean verifikasi oleh Admin. Silakan hubungi admin untuk mengaktifkan akses.</p>
-        <button class="btn-link" id="btnKembaliLogin">Kembali ke Login</button>
+    <title>SITAMU APP - Catatan Utama</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body class="admin-mode"> <div class="admin-container">
+    <div class="header-panel">
+        <h2>Buku Catatan Tamu (SITAMU APP)</h2>
+        <button class="btn-logout" id="btnLogoutUser">Keluar</button>
     </div>
 
-    <div id="sectionLogin">
-        <div class="brand-header">
-            <h1>SITAMU APP</h1>
-            <p>Masuk Untuk Mengelola Catatan Amplop Digital Anda</p>
-        </div>
-        <form id="formLogin">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="loginEmail" class="form-control" placeholder="nama@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Masukkan password" required>
-                    <span class="toggle-password" onclick="intipPassword('loginPassword', this)">LIHAT</span>
-                </div>
-            </div>
-            <div class="action-flex">
-                <div></div>
-                <button type="button" class="btn-link" id="btnLupaPassword">Lupa Password?</button>
-            </div>
-            <button type="submit" class="btn-primary">Masuk Sekarang</button>
-        </form>
-        <div class="switch-auth-mode">
-            Belum punya akun? <button class="btn-link" id="LariKeDaftar">Daftar Akun Baru</button>
-        </div>
-    </div>
-
-    <div id="sectionDaftar" style="display: none;">
-        <div class="brand-header">
-            <h1>Daftar Akun</h1>
-            <p>Buat akun baru. Akses memerlukan persetujuan admin.</p>
-        </div>
-        <form id="formDaftar">
-            <div class="form-group">
-                <label>Alamat Email</label>
-                <input type="email" id="daftarEmail" class="form-control" placeholder="nama@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Buat Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="daftarPassword" class="form-control" placeholder="Minimal 6 karakter" required>
-                    <span class="toggle-password" onclick="intipPassword('daftarPassword', this)">LIHAT</span>
-                </div>
-            </div>
-            <button type="submit" class="btn-primary" style="background: #555;">Kirim Permohonan</button>
-        </form>
-        <div class="switch-auth-mode">
-            Sudah punya akun? <button class="btn-link" id="LariKeLogin">Masuk di sini</button>
-        </div>
+    <div id="kontenUtama" style="padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc;">
+        <h3 style="color: #11998e; margin-bottom: 10px;">Selamat Datang!</h3>
+        <p style="color: #555; line-height: 1.6;">
+            Ini adalah halaman utama (Dashboard) untuk pengguna yang aksesnya sudah <b>disetujui</b> oleh Admin. 
+            <br><br>
+            <i>*Nanti Anda bisa meletakkan kode form input nama tamu, amplop digital, dan tabel data tamu undangan Anda di dalam kotak ini.*</i>
+        </p>
     </div>
 </div>
 
-<script type="module" src="sitamu.js"></script>
+<script type="module" src="index.js"></script>
 </body>
 </html>
