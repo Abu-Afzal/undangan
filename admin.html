@@ -2,79 +2,38 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - SITAMU APP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SITAMU APP</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h2>Panel Admin</h2>
-    <table border="1" cellpadding="10">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="listPengguna">
-            <tr><td colspan="3">Memuat data...</td></tr>
-        </tbody>
-    </table>
+<body class="admin-mode">
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<div class="admin-container">
+    <div class="header-panel">
+        <h2>Persetujuan Akun Pengguna</h2>
+        <button class="btn-logout" id="btnLogoutAdmin">Keluar</button>
+    </div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
-        authDomain: "data-undangan-digital-9dc5a.firebaseapp.com",
-        projectId: "data-undangan-digital-9dc5a",
-        databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app/"
-    };
+    <div id="loadingStatus" class="status-loading">
+        ⏳ Memuat Data Pengguna...
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+    <div id="tabelKonten" style="display: none;">
+        <table id="tabelPersetujuan">
+            <thead>
+                <tr>
+                    <th>Email Pengguna</th>
+                    <th>UID</th>
+                    <th>Status</th>
+                    <th>Tindakan</th>
+                </tr>
+            </thead>
+            <tbody id="listPersetujuan">
+                </tbody>
+        </table>
+    </div>
+</div>
 
-    onAuthStateChanged(auth, (user) => {
-        if (user && user.email === "anthonioanthox@gmail.com") {
-            muatData();
-        } else {
-            alert("Bukan Admin!");
-            window.location.href = "sitamu.html";
-        }
-    });
-
-    function muatData() {
-        const dbRef = ref(db, "users");
-        onValue(dbRef, (snapshot) => {
-            const tbody = document.getElementById("listPengguna");
-            tbody.innerHTML = "";
-
-            if (!snapshot.exists()) {
-                tbody.innerHTML = "<tr><td colspan='3'>Tidak ada user.</td></tr>";
-                return;
-            }
-
-            snapshot.forEach((child) => {
-                const data = child.val();
-                const uid = child.key;
-
-                if (data.email === "anthonioanthox@gmail.com") return; // Sembunyikan admin dari tabel
-
-                const tr = document.createElement("tr");
-                const status = data.isApproved ? "Aktif" : "Pending";
-                const aksi = data.isApproved ? "" : `<button onclick="setujui('${uid}')">Setujui</button>`;
-                
-                tr.innerHTML = `<td>${data.email}</td><td>${status}</td><td>${aksi}</td>`;
-                tbody.appendChild(tr);
-            });
-        });
-    }
-
-    window.setujui = function(uid) {
-        update(ref(db, `users/${uid}`), { isApproved: true })
-            .then(() => alert("Disetujui!"));
-    };
-</script>
+<script type="module" src="admin.js"></script>
 </body>
 </html>
