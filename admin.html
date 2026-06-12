@@ -86,13 +86,13 @@
 
     <div id="user-list">
         <div id="loading">Menghubungkan ke Firebase...</div>
-    </div>
+    }</div>
 </div>
 
 <script type="module">
-    // IMPORT FIREBASE SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+    // IMPORT FIREBASE SDK (Disamakan versinya dengan sitamu.html agar stabil)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // KONFIGURASI FIREBASE RESMI ANDA
     const firebaseConfig = {
@@ -112,63 +112,63 @@
     const userListContainer = document.getElementById("user-list");
     const countBadge = document.getElementById("count-badge");
 
-    // AMBIL DATA USER DARI REALTIME DATABASE
-    const usersRef = ref(db, 'users');
-    onValue(usersRef, (snapshot) => {
+    // MODIFIKASI UTAMA: Memantau path 'approval_requests' sesuai kiriman sitamu.html
+    const approvalRef = ref(db, 'approval_requests');
+    
+    onValue(approvalRef, (snapshot) => {
         userListContainer.innerHTML = "";
         let pendingCount = 0;
 
         if (!snapshot.exists()) {
-            userListContainer.innerHTML = '<div class="empty-state">Belum ada data pengguna di Database.</div>';
+            userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#2e7d32"></i><br><br>Semua akun sudah aktif! Tidak ada pendaftar baru.</div>';
             countBadge.innerText = "0 Antrean";
             return;
         }
 
         snapshot.forEach((childSnapshot) => {
             const uid = childSnapshot.key;
-            const userData = childSnapshot.val();
+            const requestData = childSnapshot.val();
 
-            // Hanya tampilkan yang status isApproved-nya masih FALSE
-            if (userData.isApproved === false) {
-                pendingCount++;
-                const card = document.createElement("div");
-                card.className = "user-card";
-                card.innerHTML = `
-                    <div class="user-info">
-                        <p class="email">${userData.email}</p>
-                        <p class="uid">UID: ${uid}</p>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-delete" onclick="hapusUser('${uid}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn-approve" onclick="setujuiUser('${uid}')"><i class="fas fa-check"></i> Setujui</button>
-                    </div>
-                `;
-                userListContainer.appendChild(card);
-            }
+            pendingCount++;
+            const card = document.createElement("div");
+            card.className = "user-card";
+            card.innerHTML = `
+                <div class="user-info">
+                    <p class="email">${requestData.email}</p>
+                    <p class="uid">UID: ${uid}</p>
+                </div>
+                <div class="actions">
+                    <button class="btn-delete" onclick="hapusUser('${uid}', '${requestData.email}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn-approve" onclick="setujuiUser('${uid}', '${requestData.email}')"><i class="fas fa-check"></i> Setujui</button>
+                </div>
+            `;
+            userListContainer.appendChild(card);
         });
 
         countBadge.innerText = `${pendingCount} Menunggu Persetujuan`;
-        if (pendingCount === 0) {
-            userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#2e7d32"></i><br><br>Semua akun sudah aktif! Tidak ada pendaftar baru.</div>';
-        }
     });
 
     // FUNGSI UTAMA APPROVAL (SETUJUI)
-    window.setujuiUser = (uid) => {
-        if(confirm("Setujui akun ini agar bisa langsung masuk ke aplikasi?")) {
-            const userRef = ref(db, `users/${uid}`);
-            update(userRef, { isApproved: true })
-            .then(() => alert("Akun berhasil diaktifkan!"))
+    window.setujuiUser = (uid, email) => {
+        if(confirm(`Setujui akun ${email} agar bisa langsung masuk ke aplikasi?`)) {
+            // 1. Izinkan akses di tabel user utama
+            const aktivasiUser = update(ref(db, `users/${uid}`), { isApproved: true });
+            
+            // 2. Bersihkan antrean di tabel approval_requests
+            const hapusLogAntrean = remove(ref(db, `approval_requests/${uid}`));
+
+            Promise.all([aktivasiUser, hapusLogAntrean])
+            .then(() => alert("Akun berhasil diaktifkan dan diverifikasi!"))
             .catch((err) => alert("Gagal menyetujui: " + err.message));
         }
     };
 
     // FUNGSI TOLAK / HAPUS PENDAFTAR
-    window.hapusUser = (uid) => {
-        if(confirm("Hapus pendaftar ini dari daftar antrean?")) {
-            const userRef = ref(db, `users/${uid}`);
-            remove(userRef)
-            .then(() => alert("Pendaftar telah berhasil dihapus."))
+    window.hapusUser = (uid, email) => {
+        if(confirm(`Tolak dan hapus permohonan pendaftaran dari ${email}?`)) {
+            // Menghapus data dari antrean permohonan saja
+            remove(ref(db, `approval_requests/${uid}`))
+            .then(() => alert("Pendaftar telah berhasil ditolak."))
             .catch((err) => alert("Gagal menghapus: " + err.message));
         }
     };
