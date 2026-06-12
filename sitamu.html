@@ -263,6 +263,10 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
+    // --- DI SINI TEMPAT MENYIMPAN UID ADMIN ANDA ---
+    // Ganti teks di bawah dengan UID Admin yang ada di tab Firebase Authentication Anda
+    const ADMIN_UID = "gBtXPsLr4aScidzYCQ1eGNYeYHs1"; 
+
     // Navigasi Tampilan Antarmuka Lokal
     const secLogin = document.getElementById('sectionLogin');
     const secDaftar = document.getElementById('sectionDaftar');
@@ -314,12 +318,19 @@
             .then((userCredential) => {
                 const user = userCredential.user;
 
-                // Periksa apakah status di database sudah di-approve oleh admin
+                // PERBAIKAN: Jika yang login adalah Akun Admin Utama, langsung bypass ke admin.html
+                if (user.uid === ADMIN_UID) {
+                    alert("Sesi Admin Terverifikasi. Membuka Panel Kontrol...");
+                    window.location.href = "admin.html";
+                    return; 
+                }
+
+                // JIKA BUKAN ADMIN (USER BIASA), JALANKAN VALIDASI APPROVAL SEPERTI BIASA
                 get(ref(db, `users/${user.uid}/isApproved`)).then((snapshot) => {
                     const isApproved = snapshot.val();
                     
                     if (isApproved === true) {
-                        // Jika disetujui, lempar ke halaman aplikasi utama
+                        // Jika disetujui, lempar ke halaman aplikasi utama penginputan data tamu
                         window.location.href = "index.html";
                     } else {
                         // Jika belum disetujui, tendang keluar dan beri peringatan
