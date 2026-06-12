@@ -263,8 +263,7 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // --- DI SINI TEMPAT MENYIMPAN UID ADMIN ANDA ---
-    // Ganti teks di bawah dengan UID Admin yang ada di tab Firebase Authentication Anda
+    // UID Admin Utama
     const ADMIN_UID = "gBtXPsLr4aScidzYCQ1eGNYeYHs1"; 
 
     // Navigasi Tampilan Antarmuka Lokal
@@ -286,19 +285,16 @@
             .then((userCredential) => {
                 const user = userCredential.user;
                 
-                // Set metadata awal di database: isApproved = false
                 set(ref(db, `users/${user.uid}`), {
                     email: email,
                     isApproved: false
                 }).then(() => {
-                    // Masukkan ke antrean log registrasi luar agar admin mudah melihat rekapnya
                     set(ref(db, `approval_requests/${user.uid}`), {
                         email: email,
                         uid: user.uid,
                         status: "Menunggu Persetujuan"
                     });
 
-                    // Langsung keluarkan user dari sesi aktif agar tidak langsung lolos masuk
                     signOut(auth).then(() => {
                         overlayStatus.style.display = 'flex';
                         document.getElementById('formDaftar').reset();
@@ -308,32 +304,30 @@
             .catch(err => alert("Gagal Daftar: " + err.message));
     });
 
-    // --- FITUR 2: LOGIN DENGAN VALIDASI ADMIN ---
+    // --- FITUR 2: LOGIN DENGAN VALIDASI ADMIN (DIPERKUAT) ---
     document.getElementById('formLogin').addEventListener('submit', function(e) {
         e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
+        const emailInput = document.getElementById('loginEmail').value.trim().toLowerCase();
         const password = document.getElementById('loginPassword').value;
 
-        signInWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(auth, emailInput, password)
             .then((userCredential) => {
                 const user = userCredential.user;
 
-                // PERBAIKAN: Jika yang login adalah Akun Admin Utama, langsung bypass ke admin.html
-                if (user.uid === ADMIN_UID) {
+                // SISTEM BYPASS ADMIN: Deteksi berdasarkan Email ATAU UID secara ketat
+                if (emailInput === "anthonioanthox@gmail.com" || user.uid === ADMIN_UID) {
                     alert("Sesi Admin Terverifikasi. Membuka Panel Kontrol...");
                     window.location.href = "admin.html";
                     return; 
                 }
 
-                // JIKA BUKAN ADMIN (USER BIASA), JALANKAN VALIDASI APPROVAL SEPERTI BIASA
+                // JIKA BUKAN ADMIN (USER BIASA), CEK STATUS APPROVAL
                 get(ref(db, `users/${user.uid}/isApproved`)).then((snapshot) => {
                     const isApproved = snapshot.val();
                     
                     if (isApproved === true) {
-                        // Jika disetujui, lempar ke halaman aplikasi utama penginputan data tamu
                         window.location.href = "index.html";
                     } else {
-                        // Jika belum disetujui, tendang keluar dan beri peringatan
                         signOut(auth).then(() => {
                             alert("Akses Ditolak: Akun Anda belum disetujui oleh Admin. Silakan hubungi pengelola sistem.");
                         });
@@ -353,7 +347,6 @@
             .catch(err => alert("Gagal mengirim link: " + err.message));
     });
 
-    // Ekspos fungsi intip password ke window agar bisa dipanggil inline HTML
     window.intipPassword = function(idInput, element) {
         const input = document.getElementById(idInput);
         if (input.type === "password") {
