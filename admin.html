@@ -80,7 +80,7 @@
 
 <div class="container">
     <header>
-        <h2><i class="fas fa-user-shield"></i> Persetujuan Akun</h2>
+        <h2><i class="fas fa-user-shield"></i> Persetujuan Akun (SITAMU APP)</h2>
         <div id="count-badge" class="stats">Memuat...</div>
     </header>
 
@@ -90,20 +90,20 @@
 </div>
 
 <script type="module">
-    // 1. IMPORT FIREBASE SDK
+    // IMPORT FIREBASE SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
     import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-    // 2. KONFIGURASI FIREBASE (GANTI DENGAN MILIK ANDA)
+    // KONFIGURASI FIREBASE RESMI ANDA
     const firebaseConfig = {
-    apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
-    authDomain: "data-undangan-digital-9dc5a.firebaseapp.com",
-    databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "data-undangan-digital-9dc5a",
-    storageBucket: "data-undangan-digital-9dc5a.firebasestorage.app",
-    messagingSenderId: "765763173060",
-    appId: "1:765763173060:web:043f3f4f5d3de0e30ae791",
-    measurementId: "G-1HTRDFF02C"
+        apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
+        authDomain: "data-undangan-digital-9dc5a.firebaseapp.com",
+        databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "data-undangan-digital-9dc5a",
+        storageBucket: "data-undangan-digital-9dc5a.firebasestorage.app",
+        messagingSenderId: "765763173060",
+        appId: "1:765763173060:web:043f3f4f5d3de0e30ae791",
+        measurementId: "G-1HTRDFF02C"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -112,14 +112,14 @@
     const userListContainer = document.getElementById("user-list");
     const countBadge = document.getElementById("count-badge");
 
-    // 3. AMBIL DATA USER DARI REALTIME DATABASE
+    // AMBIL DATA USER DARI REALTIME DATABASE
     const usersRef = ref(db, 'users');
     onValue(usersRef, (snapshot) => {
         userListContainer.innerHTML = "";
         let pendingCount = 0;
 
         if (!snapshot.exists()) {
-            userListContainer.innerHTML = '<div class="empty-state">Belum ada data pengguna.</div>';
+            userListContainer.innerHTML = '<div class="empty-state">Belum ada data pengguna di Database.</div>';
             countBadge.innerText = "0 Antrean";
             return;
         }
@@ -128,7 +128,7 @@
             const uid = childSnapshot.key;
             const userData = childSnapshot.val();
 
-            // Hanya tampilkan yang isApproved-nya FALSE
+            // Hanya tampilkan yang status isApproved-nya masih FALSE
             if (userData.isApproved === false) {
                 pendingCount++;
                 const card = document.createElement("div");
@@ -136,7 +136,7 @@
                 card.innerHTML = `
                     <div class="user-info">
                         <p class="email">${userData.email}</p>
-                        <p class="uid">ID: ${uid}</p>
+                        <p class="uid">UID: ${uid}</p>
                     </div>
                     <div class="actions">
                         <button class="btn-delete" onclick="hapusUser('${uid}')"><i class="fas fa-trash"></i></button>
@@ -149,26 +149,26 @@
 
         countBadge.innerText = `${pendingCount} Menunggu Persetujuan`;
         if (pendingCount === 0) {
-            userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#ddd"></i><br><br>Semua akun sudah disetujui!</div>';
+            userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#2e7d32"></i><br><br>Semua akun sudah aktif! Tidak ada pendaftar baru.</div>';
         }
     });
 
-    // 4. FUNGSI SETUJUI (APPROVE)
+    // FUNGSI UTAMA APPROVAL (SETUJUI)
     window.setujuiUser = (uid) => {
-        if(confirm("Setujui akun ini agar bisa login?")) {
+        if(confirm("Setujui akun ini agar bisa langsung masuk ke aplikasi?")) {
             const userRef = ref(db, `users/${uid}`);
             update(userRef, { isApproved: true })
-            .then(() => alert("Berhasil! Akun sekarang aktif."))
-            .catch((err) => alert("Gagal: " + err.message));
+            .then(() => alert("Akun berhasil diaktifkan!"))
+            .catch((err) => alert("Gagal menyetujui: " + err.message));
         }
     };
 
-    // 5. FUNGSI HAPUS (DELETE)
+    // FUNGSI TOLAK / HAPUS PENDAFTAR
     window.hapusUser = (uid) => {
-        if(confirm("Hapus pendaftar ini? Mereka tidak akan bisa masuk.")) {
+        if(confirm("Hapus pendaftar ini dari daftar antrean?")) {
             const userRef = ref(db, `users/${uid}`);
             remove(userRef)
-            .then(() => alert("Pendaftar telah dihapus."))
+            .then(() => alert("Pendaftar telah berhasil dihapus."))
             .catch((err) => alert("Gagal menghapus: " + err.message));
         }
     };
