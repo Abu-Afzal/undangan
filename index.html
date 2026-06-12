@@ -3,40 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Aplikasi Catatan Undangan Digital</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <title>Catatan Undangan Digital</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Aplikasi Catatan Undangan Digital</h1>
-        <p>Solusi Cerdas Pencatatan dan Pencarian Tamu</p>
-        <div class="cloud-status" id="statusKoneksi">🔄 Menghubungkan ke Cloud...</div>
+<div class="app-wrapper">
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-text">
+            <h1>📩 Catatan Undangan Digital</h1>
+            <p>Pencatatan & pencarian cepat ribuan tamu undangan berbasis cloud</p>
+        </div>
+        <div class="cloud-badge" id="statusKoneksi">
+            <span class="loading-spinner"></span> Menghubungkan…
+        </div>
     </header>
 
+    <!-- ===== USER NAV ===== -->
     <div class="user-nav-bar">
-        <div>Akun Aktif: <strong id="userEmailAktif">Memuat...</strong></div>
-        <button type="button" class="btn btn-danger" id="btnLogout">Keluar</button>
+        <div>Akun aktif: <strong id="userEmailAktif">Mengecek sesi…</strong></div>
+        <button type="button" class="btn btn-danger" id="btnLogout" style="padding: 7px 16px; font-size: 13px;">
+            Keluar
+        </button>
     </div>
 
-    <div id="areaAplikasiUtama">
+    <!-- ===== AREA UTAMA ===== -->
+    <div id="areaAplikasiUtama" style="display: none;">
+
+        <!-- Acara / Tab Section -->
         <div class="acara-section">
-            <div class="acara-header">
-                <div class="acara-title">Daftar Acara / Hajatan</div>
-                <form class="form-tambah-acara" id="formAcara">
-                    <input type="text" id="namaAcaraBaru" class="form-control" placeholder="Nama Acara Baru..." required>
-                    <button type="submit" class="btn">+ Tambah</button>
+            <div class="acara-top">
+                <span class="acara-label">📁 Daftar Acara / Hajatan</span>
+                <form class="form-acara-inline" id="formAcara">
+                    <input
+                        type="text"
+                        id="namaAcaraBaru"
+                        class="form-control"
+                        placeholder="Nama acara baru… (cth: Pernikahan Fulan)"
+                        required
+                    >
+                    <button type="submit" class="btn">+ Acara</button>
                 </form>
             </div>
             <div class="tabs-container" id="wadahTabs"></div>
         </div>
 
-        <div id="kontenUtama">
-            </div>
-    </div>
-</div>
+        <!-- Konten Utama (tersembunyi jika belum ada acara) -->
+        <div id="kontenUtama" style="display: none;">
 
-<script type="module" src="assets/js/dashboard.js"></script>
+            <!-- Grid: Form + Statistik -->
+            <div class="main-grid">
+
+                <!-- Form Tambah Tamu -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">✍️</span>
+                        Tambah Catatan Amplop
+                    </div>
+                    <form id="formCatatan">
+                        <div class="form-group">
+                            <label for="namaTamu">Nama Tamu Undangan</label>
+                            <input type="text" id="namaTamu" class="form-control"
+                                placeholder="Contoh: Abu Afzal" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="asalTamu">Asal / Alamat</label>
+                            <input type="text" id="asalTamu" class="form-control"
+                                placeholder="Contoh: Lamanda" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nominalMasker">Nominal Amplop (Rp)</label>
+                            <input type="text" id="nominalMasker" class="form-control"
+                                placeholder="Contoh: 100.000" required>
+                        </div>
+                        <button type="submit" class="btn btn-block">Simpan Catatan</button>
+                    </form>
+                </div>
+
+                <!-- Statistik -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">📊</span>
+                        Ringkasan — <span class="label-acara-aktif section-acara-name" style="font-size:12px;"></span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div>
+                                <div class="stat-label">Total Dana Terkumpul</div>
+                                <div class="stat-value" id="totalDana">Rp 0</div>
+                            </div>
+                            <span class="stat-icon">💰</span>
+                        </div>
+                        <div class="stat-item neutral">
+                            <div>
+                                <div class="stat-label">Total Tamu Tercatat</div>
+                                <div class="stat-value" id="totalTamu">0</div>
+                                <div class="stat-subtext">orang</div>
+                            </div>
+                            <span class="stat-icon">👥</span>
+                        </div>
+                        <div class="stat-item warning">
+                            <div>
+                                <div class="stat-label">Belum Dibalas</div>
+                                <div class="stat-value" id="totalBelum">0</div>
+                                <div class="stat-subtext">orang</div>
+                            </div>
+                            <span class="stat-icon">⏳</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar-wrap">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    id="keywordSaring"
+                    class="form-control"
+                    placeholder="Cari nama tamu atau asal daerah secara instan…"
+                >
+            </div>
+
+            <!-- Tabel -->
+            <div class="table-wrap">
+                <div class="table-header-bar">
+                    <span>Data Tamu — <span class="label-acara-aktif"></span></span>
+                    <span id="tableRowCount" style="color: var(--text-muted); font-weight: 400;"></span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 4%;">#</th>
+                                <th style="width: 28%;">Nama Tamu</th>
+                                <th style="width: 28%;">Asal / Alamat</th>
+                                <th style="width: 16%;">Nominal</th>
+                                <th style="width: 16%;">Status Balas</th>
+                                <th style="width: 8%;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyTabel">
+                            <tr>
+                                <td colspan="6" class="state-cell">
+                                    <span class="loading-spinner"></span> Memuat data dari cloud…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /kontenUtama -->
+    </div><!-- /areaAplikasiUtama -->
+
+</div><!-- /app-wrapper -->
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
