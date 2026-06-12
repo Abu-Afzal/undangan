@@ -18,48 +18,39 @@ const firebaseConfig = {
     databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
 const auth = getAuth(app);
 
 // ===== STATE GLOBAL =====
-let masterAcara = {};
-let idAcaraAktif = localStorage.getItem('idAcaraAktif') || null;
-let currentUser = null;
+let masterAcara   = {};
+let idAcaraAktif  = localStorage.getItem('idAcaraAktif') || null;
+let currentUser   = null;
 let dbListenerRef = null;
 
 // ===== ELEMENT SELECTORS =====
-const elStatusKoneksi   = document.getElementById('statusKoneksi');
-const elWadahTabs       = document.getElementById('wadahTabs');
-const elBodyTabel       = document.getElementById('bodyTabel');
-const elKeyword         = document.getElementById('keywordSaring');
-const elNominalMasker   = document.getElementById('nominalMasker');
-const elUserEmail       = document.getElementById('userEmailAktif');
-const elAreaUtama       = document.getElementById('areaAplikasiUtama');
-const elKontenUtama     = document.getElementById('kontenUtama');
-const elLabelAcara      = document.querySelectorAll('.label-acara-aktif');
-const elTableCount      = document.getElementById('tableRowCount');
+const elWadahTabs    = document.getElementById('wadahTabs');
+const elBodyTabel    = document.getElementById('bodyTabel');
+const elKeyword      = document.getElementById('keywordSaring');
+const elNominalMasker= document.getElementById('nominalMasker');
+const elUserEmail    = document.getElementById('userEmailAktif');
+const elAreaUtama    = document.getElementById('areaAplikasiUtama');
+const elKontenUtama  = document.getElementById('kontenUtama');
+const elEmptyAcara   = document.getElementById('emptyAcara');
+const elTableCount   = document.getElementById('tableRowCount');
 
 // ===== UTILITY =====
 function formatRupiah(angka) {
     return "Rp " + parseInt(angka || 0).toLocaleString('id-ID');
 }
 
-function setKoneksiStatus(ok) {
-    if (ok) {
-        elStatusKoneksi.innerHTML = '☁️ Terhubung ke Cloud';
-        elStatusKoneksi.style.background = 'rgba(0, 212, 170, 0.15)';
-        elStatusKoneksi.style.borderColor = 'rgba(0, 212, 170, 0.3)';
-        elStatusKoneksi.style.color = '#00d4aa';
-    } else {
-        elStatusKoneksi.innerHTML = '❌ Koneksi Gagal';
-        elStatusKoneksi.style.background = 'rgba(240,68,56,0.15)';
-        elStatusKoneksi.style.borderColor = 'rgba(240,68,56,0.3)';
-        elStatusKoneksi.style.color = '#f04438';
-    }
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ===== MASKING INPUT NOMINAL =====
+// ===== MASKING NOMINAL =====
 elNominalMasker.addEventListener('input', function () {
     const angka = this.value.replace(/[^\d]/g, "");
     this.value = angka === "" ? "" : parseInt(angka).toLocaleString('id-ID');
@@ -71,7 +62,7 @@ onAuthStateChanged(auth, (user) => {
         get(ref(db, `users/${user.uid}/isApproved`)).then((snapshot) => {
             if (snapshot.val() === true) {
                 currentUser = user;
-                elUserEmail.innerText = user.email;
+                elUserEmail.textContent = user.email;
                 elAreaUtama.style.display = "block";
                 sinkronisasiDataCloud();
             } else {
@@ -94,12 +85,11 @@ document.getElementById('btnLogout').addEventListener('click', () => {
     buangKeLogin();
 });
 
-// ===== SINKRONISASI REALTIME DATABASE =====
+// ===== SINKRONISASI REALTIME =====
 function sinkronisasiDataCloud() {
     dbListenerRef = ref(db, `users/${currentUser.uid}/masterAcara`);
     onValue(dbListenerRef, (snapshot) => {
         masterAcara = snapshot.val() || {};
-        setKoneksiStatus(true);
 
         const keys = Object.keys(masterAcara);
         if (keys.length > 0 && (!idAcaraAktif || !masterAcara[idAcaraAktif])) {
@@ -111,52 +101,57 @@ function sinkronisasiDataCloud() {
 
         renderTabs();
         renderData();
-    }, () => setKoneksiStatus(false));
+    });
 }
 
-// ===== RENDER TABS =====
+// ===== RENDER SIDEBAR NAV ACARA =====
 function renderTabs() {
     elWadahTabs.innerHTML = "";
     const keys = Object.keys(masterAcara);
 
     if (keys.length === 0) {
-        elWadahTabs.innerHTML = `<span class="tabs-empty">Belum ada acara. Buat acara baru di atas.</span>`;
+        elWadahTabs.innerHTML = `<span class="tabs-empty">Belum ada acara.</span>`;
         elKontenUtama.style.display = 'none';
+        elEmptyAcara.style.display  = 'block';
+        updateLabelAcara('');
         return;
     }
 
     elKontenUtama.style.display = 'block';
+    elEmptyAcara.style.display  = 'none';
 
     keys.forEach(key => {
-        const acara = masterAcara[key];
+        const acara   = masterAcara[key];
         const isActive = key === idAcaraAktif;
 
-        const tab = document.createElement('button');
-        tab.type = 'button';
-        tab.className = `tab-button${isActive ? ' active' : ''}`;
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `acara-nav-item${isActive ? ' active' : ''}`;
 
-        const iconSpan = document.createElement('span');
-        iconSpan.textContent = '📋';
+        const ico  = document.createElement('span');
+        ico.textContent = '📋';
 
-        const namaSpan = document.createElement('span');
-        namaSpan.textContent = acara.namaAcara;
+        const nama = document.createElement('span');
+        nama.className   = 'acara-nav-nama';
+        nama.textContent = acara.namaAcara;
 
-        const btnHapus = document.createElement('span');
-        btnHapus.className = 'btn-hapus-tab';
-        btnHapus.innerHTML = '&times;';
-        btnHapus.title = 'Hapus acara ini';
-        btnHapus.addEventListener('click', (e) => {
+        const del  = document.createElement('button');
+        del.type = 'button';
+        del.className   = 'acara-nav-del';
+        del.innerHTML   = '&times;';
+        del.title       = 'Hapus acara';
+        del.addEventListener('click', (e) => {
             e.stopPropagation();
             if (confirm(`Hapus permanen "${acara.namaAcara}" beserta seluruh data tamu?`)) {
                 remove(ref(db, `users/${currentUser.uid}/masterAcara/${key}`));
             }
         });
 
-        tab.appendChild(iconSpan);
-        tab.appendChild(namaSpan);
-        tab.appendChild(btnHapus);
+        item.appendChild(ico);
+        item.appendChild(nama);
+        item.appendChild(del);
 
-        tab.addEventListener('click', () => {
+        item.addEventListener('click', () => {
             idAcaraAktif = key;
             localStorage.setItem('idAcaraAktif', idAcaraAktif);
             elKeyword.value = "";
@@ -164,27 +159,29 @@ function renderTabs() {
             renderData();
         });
 
-        elWadahTabs.appendChild(tab);
+        elWadahTabs.appendChild(item);
     });
 
-    // Update label acara aktif di seluruh halaman
     if (idAcaraAktif && masterAcara[idAcaraAktif]) {
-        const namaAktif = masterAcara[idAcaraAktif].namaAcara;
-        document.querySelectorAll('.label-acara-aktif').forEach(el => {
-            el.textContent = namaAktif;
-        });
+        updateLabelAcara(masterAcara[idAcaraAktif].namaAcara);
     }
+}
+
+function updateLabelAcara(nama) {
+    document.querySelectorAll('.label-acara-aktif').forEach(el => {
+        el.textContent = nama;
+    });
 }
 
 // ===== TAMBAH ACARA BARU =====
 document.getElementById('formAcara').addEventListener('submit', function (e) {
     e.preventDefault();
-    const input = document.getElementById('namaAcaraBaru');
+    const input   = document.getElementById('namaAcaraBaru');
     const namaBaru = input.value.trim();
     if (!namaBaru) return;
 
-    const newRef = push(ref(db, `users/${currentUser.uid}/masterAcara`));
-    idAcaraAktif = newRef.key;
+    const newRef  = push(ref(db, `users/${currentUser.uid}/masterAcara`));
+    idAcaraAktif  = newRef.key;
     localStorage.setItem('idAcaraAktif', idAcaraAktif);
 
     set(newRef, { namaAcara: namaBaru, dataTamu: "" }).then(() => {
@@ -198,30 +195,30 @@ function renderData() {
     if (!idAcaraAktif || !masterAcara[idAcaraAktif]) return;
 
     const objekTamu = masterAcara[idAcaraAktif].dataTamu || {};
-    const keyword = elKeyword.value.toLowerCase();
+    const keyword   = elKeyword.value.toLowerCase();
 
     const arrayTamu = Object.keys(objekTamu)
         .map(key => ({ idFirebase: key, ...objekTamu[key] }))
         .reverse();
 
-    const dataDisaring = arrayTamu.filter(item =>
+    const disaring = arrayTamu.filter(item =>
         item.nama.toLowerCase().includes(keyword) ||
         item.asal.toLowerCase().includes(keyword)
     );
 
-    if (dataDisaring.length === 0) {
-        const state = keyword
-            ? { emoji: '🔍', msg: 'Tidak ada hasil pencarian', sub: `Tidak ada tamu bernama atau berasal dari "${elKeyword.value}"` }
-            : { emoji: '📭', msg: 'Belum ada catatan tamu', sub: 'Tambahkan tamu pertama menggunakan form di samping' };
+    if (disaring.length === 0) {
+        const s = keyword
+            ? { emoji:'🔍', msg:'Tidak ada hasil', sub:`Tidak ada tamu dengan kata kunci "${elKeyword.value}"` }
+            : { emoji:'📭', msg:'Belum ada catatan tamu', sub:'Tambahkan tamu menggunakan form di sidebar kiri' };
 
         elBodyTabel.innerHTML = `
             <tr><td colspan="6" class="state-cell">
-                <span class="state-emoji">${state.emoji}</span>
-                <div class="state-msg">${state.msg}</div>
-                <div class="state-sub">${state.sub}</div>
+                <span class="state-emoji">${s.emoji}</span>
+                <div class="state-msg">${s.msg}</div>
+                <div class="state-sub">${s.sub}</div>
             </td></tr>`;
     } else {
-        dataDisaring.forEach((item, index) => {
+        disaring.forEach((item, index) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="td-no">${index + 1}</td>
@@ -232,11 +229,10 @@ function renderData() {
                 <td></td>
             `;
 
-            // Badge status (toggle)
             const badge = document.createElement('span');
             badge.className = `status-badge ${item.sudahKembali ? 'status-sudah' : 'status-belum'}`;
             badge.innerHTML = item.sudahKembali ? '✓ Sudah Dibalas' : '⏳ Belum Dibalas';
-            badge.title = 'Klik untuk mengubah status';
+            badge.title = 'Klik untuk toggle status';
             badge.addEventListener('click', () => {
                 update(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu/${item.idFirebase}`), {
                     sudahKembali: !item.sudahKembali
@@ -244,7 +240,6 @@ function renderData() {
             });
             tr.cells[4].appendChild(badge);
 
-            // Tombol hapus
             const btnHapus = document.createElement('button');
             btnHapus.className = 'btn-delete';
             btnHapus.textContent = 'Hapus';
@@ -259,27 +254,20 @@ function renderData() {
         });
     }
 
-    // Update info jumlah baris di header tabel
     if (elTableCount) {
-        elTableCount.textContent = `${dataDisaring.length} dari ${arrayTamu.length} tamu`;
+        elTableCount.textContent = keyword
+            ? `${disaring.length} dari ${arrayTamu.length} tamu`
+            : `${arrayTamu.length} tamu`;
     }
 
     updateStatistik(arrayTamu);
 }
 
-function escHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
-
 elKeyword.addEventListener('keyup', renderData);
 
-// ===== UPDATE STATISTIK =====
+// ===== STATISTIK =====
 function updateStatistik(arrayTamu) {
-    let totalDana = 0;
+    let totalDana  = 0;
     let totalBelum = 0;
 
     arrayTamu.forEach(item => {
@@ -287,12 +275,12 @@ function updateStatistik(arrayTamu) {
         if (!item.sudahKembali) totalBelum++;
     });
 
-    document.getElementById('totalDana').textContent   = formatRupiah(totalDana);
-    document.getElementById('totalTamu').textContent   = arrayTamu.length;
-    document.getElementById('totalBelum').textContent  = totalBelum;
+    document.getElementById('totalDana').textContent  = formatRupiah(totalDana);
+    document.getElementById('totalTamu').textContent  = arrayTamu.length;
+    document.getElementById('totalBelum').textContent = totalBelum;
 }
 
-// ===== TAMBAH DATA TAMU =====
+// ===== TAMBAH TAMU =====
 document.getElementById('formCatatan').addEventListener('submit', function (e) {
     e.preventDefault();
     if (!idAcaraAktif) return;
@@ -303,10 +291,7 @@ document.getElementById('formCatatan').addEventListener('submit', function (e) {
 
     if (!nama || !asal || isNaN(nominal)) return;
 
-    const tamuBaru = { nama, asal, nominal, sudahKembali: false, timestamp: Date.now() };
     const newRef = push(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu`));
-
-    set(newRef, tamuBaru).then(() => {
-        this.reset();
-    });
+    set(newRef, { nama, asal, nominal, sudahKembali: false, timestamp: Date.now() })
+        .then(() => this.reset());
 });
