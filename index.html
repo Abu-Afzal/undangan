@@ -8,156 +8,149 @@
 </head>
 <body>
 
-<div class="app-wrapper">
+<div class="layout">
 
-    <!-- ===== HEADER ===== -->
-    <header class="app-header">
-        <div class="header-text">
-            <h1>📩 Catatan Undangan Digital</h1>
-            <p>Pencatatan & pencarian cepat ribuan tamu undangan berbasis cloud</p>
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <div class="brand-icon">📩</div>
+            <div>
+                <div class="brand-title">Undangan Digital</div>
+                <div class="brand-sub">Catatan Amplop Cloud</div>
+            </div>
         </div>
+
+        <!-- User Info -->
+        <div id="areaAplikasiUtama" style="display:none;">
+
+            <div class="sidebar-user">
+                <div class="user-avatar">👤</div>
+                <div class="user-info">
+                    <div class="user-label">Akun Aktif</div>
+                    <div class="user-email" id="userEmailAktif">Mengecek…</div>
+                </div>
+                <button type="button" class="btn-logout" id="btnLogout" title="Keluar">⏻</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="sidebar-section-label">Ringkasan</div>
+            <div class="sidebar-stats">
+                <div class="sstat">
+                    <div class="sstat-icon teal">💰</div>
+                    <div>
+                        <div class="sstat-label">Total Dana</div>
+                        <div class="sstat-value" id="totalDana">Rp 0</div>
+                    </div>
+                </div>
+                <div class="sstat">
+                    <div class="sstat-icon indigo">👥</div>
+                    <div>
+                        <div class="sstat-label">Total Tamu</div>
+                        <div class="sstat-value"><span id="totalTamu">0</span> orang</div>
+                    </div>
+                </div>
+                <div class="sstat">
+                    <div class="sstat-icon amber">⏳</div>
+                    <div>
+                        <div class="sstat-label">Belum Dibalas</div>
+                        <div class="sstat-value"><span id="totalBelum">0</span> orang</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Form Tambah Tamu -->
+            <div class="sidebar-section-label">Tambah Catatan Amplop</div>
+            <form id="formCatatan" class="sidebar-form">
+                <div class="sform-group">
+                    <label for="namaTamu">Nama Tamu</label>
+                    <input type="text" id="namaTamu" class="sinput" placeholder="Contoh: Abu Afzal" required>
+                </div>
+                <div class="sform-group">
+                    <label for="asalTamu">Asal / Alamat</label>
+                    <input type="text" id="asalTamu" class="sinput" placeholder="Contoh: Lamanda" required>
+                </div>
+                <div class="sform-group">
+                    <label for="nominalMasker">Nominal Amplop (Rp)</label>
+                    <input type="text" id="nominalMasker" class="sinput" placeholder="Contoh: 100.000" required>
+                </div>
+                <button type="submit" class="sbtn">＋ Simpan Catatan</button>
+            </form>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Daftar Acara -->
+            <div class="sidebar-acara-header">
+                <div class="sidebar-section-label" style="margin:0;">Daftar Acara</div>
+            </div>
+            <form id="formAcara" class="form-acara-sidebar">
+                <input type="text" id="namaAcaraBaru" class="sinput" placeholder="Nama acara baru…" required>
+                <button type="submit" class="sbtn sbtn-sm">＋</button>
+            </form>
+            <nav class="acara-nav" id="wadahTabs"></nav>
+
+        </div><!-- /areaAplikasiUtama -->
+
         <div id="statusKoneksi" style="display:none;"></div>
-    </header>
+    </aside>
 
-    <!-- ===== USER NAV ===== -->
-    <div class="user-nav-bar">
-        <div>Akun aktif: <strong id="userEmailAktif">Mengecek sesi…</strong></div>
-        <button type="button" class="btn btn-danger" id="btnLogout" style="padding: 7px 16px; font-size: 13px;">
-            Keluar
-        </button>
-    </div>
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
 
-    <!-- ===== AREA UTAMA ===== -->
-    <div id="areaAplikasiUtama" style="display: none;">
-
-        <!-- Acara / Tab Section -->
-        <div class="acara-section">
-            <div class="acara-top">
-                <span class="acara-label">📁 Daftar Acara / Hajatan</span>
-                <form class="form-acara-inline" id="formAcara">
-                    <input
-                        type="text"
-                        id="namaAcaraBaru"
-                        class="form-control"
-                        placeholder="Nama acara baru… (cth: Pernikahan Fulan)"
-                        required
-                    >
-                    <button type="submit" class="btn">+ Acara</button>
-                </form>
+        <!-- Top bar -->
+        <div class="topbar">
+            <div class="topbar-title">
+                Data Tamu — <span class="label-acara-aktif topbar-acara"></span>
             </div>
-            <div class="tabs-container" id="wadahTabs"></div>
+            <span class="topbar-count" id="tableRowCount"></span>
         </div>
 
-        <!-- Konten Utama (tersembunyi jika belum ada acara) -->
-        <div id="kontenUtama" style="display: none;">
+        <!-- Search -->
+        <div class="search-wrap">
+            <span class="search-ico">🔍</span>
+            <input type="text" id="keywordSaring" class="search-input"
+                placeholder="Cari nama tamu atau asal daerah secara instan…">
+        </div>
 
-            <!-- Grid: Form + Statistik -->
-            <div class="main-grid">
-
-                <!-- Form Tambah Tamu -->
-                <div class="card">
-                    <div class="card-title">
-                        <span class="icon">✍️</span>
-                        Tambah Catatan Amplop
-                    </div>
-                    <form id="formCatatan">
-                        <div class="form-group">
-                            <label for="namaTamu">Nama Tamu Undangan</label>
-                            <input type="text" id="namaTamu" class="form-control"
-                                placeholder="Contoh: Abu Afzal" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="asalTamu">Asal / Alamat</label>
-                            <input type="text" id="asalTamu" class="form-control"
-                                placeholder="Contoh: Lamanda" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="nominalMasker">Nominal Amplop (Rp)</label>
-                            <input type="text" id="nominalMasker" class="form-control"
-                                placeholder="Contoh: 100.000" required>
-                        </div>
-                        <button type="submit" class="btn btn-block">Simpan Catatan</button>
-                    </form>
-                </div>
-
-                <!-- Statistik -->
-                <div class="card">
-                    <div class="card-title">
-                        <span class="icon">📊</span>
-                        Ringkasan — <span class="label-acara-aktif section-acara-name" style="font-size:12px;"></span>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div>
-                                <div class="stat-label">Total Dana Terkumpul</div>
-                                <div class="stat-value" id="totalDana">Rp 0</div>
-                            </div>
-                            <span class="stat-icon">💰</span>
-                        </div>
-                        <div class="stat-item neutral">
-                            <div>
-                                <div class="stat-label">Total Tamu Tercatat</div>
-                                <div class="stat-value" id="totalTamu">0</div>
-                                <div class="stat-subtext">orang</div>
-                            </div>
-                            <span class="stat-icon">👥</span>
-                        </div>
-                        <div class="stat-item warning">
-                            <div>
-                                <div class="stat-label">Belum Dibalas</div>
-                                <div class="stat-value" id="totalBelum">0</div>
-                                <div class="stat-subtext">orang</div>
-                            </div>
-                            <span class="stat-icon">⏳</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Search Bar -->
-            <div class="search-bar-wrap">
-                <span class="search-icon">🔍</span>
-                <input
-                    type="text"
-                    id="keywordSaring"
-                    class="form-control"
-                    placeholder="Cari nama tamu atau asal daerah secara instan…"
-                >
-            </div>
-
-            <!-- Tabel -->
+        <!-- Konten Utama -->
+        <div id="kontenUtama" style="display:none;">
             <div class="table-wrap">
-                <div class="table-header-bar">
-                    <span>Data Tamu — <span class="label-acara-aktif"></span></span>
-                    <span id="tableRowCount" style="color: var(--text-muted); font-weight: 400;"></span>
-                </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 4%;">#</th>
-                                <th style="width: 28%;">Nama Tamu</th>
-                                <th style="width: 28%;">Asal / Alamat</th>
-                                <th style="width: 16%;">Nominal</th>
-                                <th style="width: 16%;">Status Balas</th>
-                                <th style="width: 8%;">Aksi</th>
+                                <th style="width:4%">#</th>
+                                <th style="width:28%">Nama Tamu</th>
+                                <th style="width:28%">Asal / Alamat</th>
+                                <th style="width:16%">Nominal</th>
+                                <th style="width:16%">Status Balas</th>
+                                <th style="width:8%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="bodyTabel">
                             <tr>
                                 <td colspan="6" class="state-cell">
-                                    <span class="loading-spinner"></span> Memuat data dari cloud…
+                                    <span class="loading-spinner"></span> Memuat data…
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-        </div><!-- /kontenUtama -->
-    </div><!-- /areaAplikasiUtama -->
+        <!-- Empty: belum ada acara -->
+        <div id="emptyAcara" class="empty-state" style="display:none;">
+            <div class="empty-emoji">📋</div>
+            <div class="empty-msg">Belum ada acara</div>
+            <div class="empty-sub">Buat acara baru melalui sidebar kiri untuk mulai mencatat tamu.</div>
+        </div>
 
-</div><!-- /app-wrapper -->
+    </main>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
