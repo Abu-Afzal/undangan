@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SITAMU APP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --danger-color: #d32f2f;
+            --bg-color: #f4f7f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        h2 { color: var(--primary-color); margin: 0; }
+        .stats {
+            font-size: 0.9em;
+            color: #666;
+            background: #e8f5e9;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .user-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+        .user-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .user-info p { margin: 0; font-size: 14px; }
+        .user-info .email { font-weight: bold; color: #333; }
+        .user-info .uid { font-size: 11px; color: #999; font-family: monospace; }
+        
+        .actions { display: flex; gap: 10px; }
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn-approve { background-color: var(--primary-color); color: white; }
+        .btn-approve:hover { background-color: #1b5e20; }
+        .btn-delete { background-color: #fff; color: var(--danger-color); border: 1px solid var(--danger-color); }
+        .btn-delete:hover { background-color: var(--danger-color); color: white; }
+        
+        #loading { text-align: center; color: #999; padding: 20px; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2><i class="fas fa-user-shield"></i> Persetujuan Akun</h2>
+        <div id="count-badge" class="stats">Memuat...</div>
+    </header>
+
+    <div id="user-list">
+        <div id="loading">Menghubungkan ke Firebase...</div>
+    </div>
+</div>
+
+<script type="module">
+    // 1. IMPORT FIREBASE SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+    // 2. KONFIGURASI FIREBASE (GANTI DENGAN MILIK ANDA)
+    const firebaseConfig = {
+        apiKey: "AIzaSy...",
+        authDomain: "data-undangan-digital-9dc5a.firebaseapp.com",
+        databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "data-undangan-digital-9dc5a",
+        storageBucket: "data-undangan-digital-9dc5a.appspot.com",
+        messagingSenderId: "...",
+        appId: "..."
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const userListContainer = document.getElementById("user-list");
+    const countBadge = document.getElementById("count-badge");
+
+    // 3. AMBIL DATA USER DARI REALTIME DATABASE
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, (snapshot) => {
+        userListContainer.innerHTML = "";
+        let pendingCount = 0;
+
+        if (!snapshot.exists()) {
+            userListContainer.innerHTML = '<div class="empty-state">Belum ada data pengguna.</div>';
+            countBadge.innerText = "0 Antrean";
+            return;
+        }
+
+        snapshot.forEach((childSnapshot) => {
+            const uid = childSnapshot.key;
+            const userData = childSnapshot.val();
+
+            // Hanya tampilkan yang isApproved-nya FALSE
+            if (userData.isApproved === false) {
+                pendingCount++;
+                const card = document.createElement("div");
+                card.className = "user-card";
+                card.innerHTML = `
+                    <div class="user-info">
+                        <p class="email">${userData.email}</p>
+                        <p class="uid">ID: ${uid}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-delete" onclick="hapusUser('${uid}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-approve" onclick="setujuiUser('${uid}')"><i class="fas fa-check"></i> Setujui</button>
+                    </div>
+                `;
+                userListContainer.appendChild(card);
+            }
+        });
+
+        countBadge.innerText = `${pendingCount} Menunggu Persetujuan`;
+        if (pendingCount === 0) {
+            userListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="font-size:48px; color:#ddd"></i><br><br>Semua akun sudah disetujui!</div>';
+        }
+    });
+
+    // 4. FUNGSI SETUJUI (APPROVE)
+    window.setujuiUser = (uid) => {
+        if(confirm("Setujui akun ini agar bisa login?")) {
+            const userRef = ref(db, `users/${uid}`);
+            update(userRef, { isApproved: true })
+            .then(() => alert("Berhasil! Akun sekarang aktif."))
+            .catch((err) => alert("Gagal: " + err.message));
+        }
+    };
+
+    // 5. FUNGSI HAPUS (DELETE)
+    window.hapusUser = (uid) => {
+        if(confirm("Hapus pendaftar ini? Mereka tidak akan bisa masuk.")) {
+            const userRef = ref(db, `users/${uid}`);
+            remove(userRef)
+            .then(() => alert("Pendaftar telah dihapus."))
+            .catch((err) => alert("Gagal menghapus: " + err.message));
+        }
+    };
+</script>
+
+</body>
+</html>
