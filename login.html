@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Catatan Undangan Digital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:      #0f1729;
+            --navy-soft: #1a2540;
+            --teal:      #00d4aa;
+            --teal-dark: #00b890;
+            --white:     #ffffff;
+            --cream:     #f0f4f8;
+            --border:    #e2e8f0;
+            --text-1:    #1a2540;
+            --text-2:    #637085;
+            --text-3:    #9aa5b4;
+            --danger:    #f04438;
+            --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--navy);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background decorations */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -120px; left: -120px;
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(0,212,170,0.12) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; right: -80px;
+            width: 360px; height: 360px;
+            background: radial-gradient(circle, rgba(0,212,170,0.08) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        /* Card */
+        .login-card {
+            background: var(--white);
+            border-radius: var(--r-lg);
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+        }
+
+        /* Brand */
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .brand-icon {
+            font-size: 36px;
+            width: 68px; height: 68px;
+            background: linear-gradient(135deg, rgba(0,212,170,0.15), rgba(0,212,170,0.05));
+            border: 2px solid rgba(0,212,170,0.2);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-1);
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .brand-sub {
+            font-size: 13px;
+            color: var(--text-3);
+        }
+
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            background: var(--cream);
+            border-radius: var(--r-sm);
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-3);
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            background: var(--white);
+            color: var(--text-1);
+            box-shadow: 0 1px 4px rgba(15,23,41,0.10);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-2);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 11px 13px;
+            font-size: 14px;
+            font-family: inherit;
+            border: 1.5px solid var(--border);
+            border-radius: var(--r-sm);
+            outline: none;
+            color: var(--text-1);
+            background: var(--white);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control::placeholder { color: var(--text-3); }
+        .form-control:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(0,212,170,0.10);
+        }
+
+        /* Password wrapper */
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap .form-control {
+            padding-right: 42px;
+        }
+
+        .btn-toggle-pw {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-3);
+            padding: 4px;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+
+        .btn-toggle-pw:hover { color: var(--text-2); }
+
+        /* Submit button */
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            background: var(--navy);
+            color: var(--teal);
+            border: none;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            margin-top: 6px;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover  { background: var(--navy-soft); }
+        .btn-submit:active { transform: scale(0.98); }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 11px 14px;
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-error {
+            background: rgba(240,68,56,0.08);
+            border: 1px solid rgba(240,68,56,0.2);
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background: rgba(0,212,170,0.08);
+            border: 1px solid rgba(0,212,170,0.2);
+            color: var(--teal-dark);
+        }
+
+        .alert.show { display: block; }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 18px 0;
+            color: var(--text-3);
+            font-size: 12px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Footer note */
+        .login-note {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-3);
+            line-height: 1.6;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 15px; height: 15px;
+            border: 2px solid rgba(0,212,170,0.3);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Panel visibility */
+        .auth-panel { display: none; }
+        .auth-panel.active { display: block; }
+
+        @media (max-width: 460px) {
+            .login-card { padding: 30px 22px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+
+    <!-- Brand -->
+    <div class="brand">
+        <div class="brand-icon">📩</div>
+        <div class="brand-title">Catatan Undangan Digital</div>
+        <div class="brand-sub">Masuk untuk mulai mencatat tamu undangan</div>
+    </div>
+
+    <!-- Tabs: Login / Daftar -->
+    <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Masuk</button>
+        <button class="auth-tab" id="tabDaftar" onclick="switchTab('daftar')">Daftar Akun</button>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert alert-error"   id="alertError"></div>
+    <div class="alert alert-success" id="alertSuccess"></div>
+
+    <!-- Panel Login -->
+    <div class="auth-panel active" id="panelLogin">
+        <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" class="form-control"
+                placeholder="contoh@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <div class="input-wrap">
+                <input type="password" id="loginPassword" class="form-control"
+                    placeholder="••••••••" autocomplete="current-password">
+                <button type="button" class="btn-toggle-pw" onclick="togglePw('loginPassword', this)">👁️</button>
+            </div>
+        </div>
+        <button class="btn-submit" id="btnLogin" onclick="doLogin()">
+            Masuk
+        </button>
+        <div class="login-note">
+            Lupa password? Hubungi admin untuk reset akun Anda.
+        </div>
+    </div>
+
+    <!-- Panel Daftar -->
+    <div class="auth-panel" id="panelDaftar">
+        <div class="form-group">
+            <label for="daftarEmail">Email</label>
+            <input type="email" id="daftarEmail" class="form-control"
+                placeholder="contoh@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="daftarPassword">Password</label>
+            <div class="input-wrap">
+                <input type="password" id="daftarPassword" class="form-control"
+                    placeholder="Min. 6 karakter" autocomplete="new-password">
+                <button type="button" class="btn-toggle-pw" onclick="togglePw('daftarPassword', this)">👁️</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="daftarKonfirmasi">Konfirmasi Password</label>
+            <div class="input-wrap">
+                <input type="password" id="daftarKonfirmasi" class="form-control"
+                    placeholder="Ulangi password" autocomplete="new-password">
+                <button type="button" class="btn-toggle-pw" onclick="togglePw('daftarKonfirmasi', this)">👁️</button>
+            </div>
+        </div>
+        <button class="btn-submit" id="btnDaftar" onclick="doDaftar()">
+            Buat Akun
+        </button>
+        <div class="login-note">
+            Setelah mendaftar, akun perlu disetujui admin sebelum bisa digunakan.
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import {
+        getAuth, onAuthStateChanged,
+        signInWithEmailAndPassword,
+        createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
+        authDomain: "data-undangan-digital-9dc5a.firebaseapp.com",
+        projectId: "data-undangan-digital-9dc5a",
+        storageBucket: "data-undangan-digital-9dc5a.firebasestorage.app",
+        messagingSenderId: "765763173060",
+        appId: "1:765763173060:web:043f3f4f5d3de0e30ae791",
+        databaseURL: "https://data-undangan-digital-9dc5a-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // Jika sudah login, langsung ke index
+    onAuthStateChanged(auth, user => {
+        if (user) window.location.href = "index.html";
+    });
+
+    // ===== HELPERS =====
+    function showError(msg) {
+        const el = document.getElementById('alertError');
+        el.textContent = msg;
+        el.classList.add('show');
+        document.getElementById('alertSuccess').classList.remove('show');
+    }
+
+    function showSuccess(msg) {
+        const el = document.getElementById('alertSuccess');
+        el.textContent = msg;
+        el.classList.add('show');
+        document.getElementById('alertError').classList.remove('show');
+    }
+
+    function clearAlerts() {
+        document.getElementById('alertError').classList.remove('show');
+        document.getElementById('alertSuccess').classList.remove('show');
+    }
+
+    function setLoading(btnId, loading) {
+        const btn = document.getElementById(btnId);
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? '<span class="spinner"></span> Memproses…'
+            : btn.dataset.label;
+    }
+
+    // Simpan label awal tombol
+    document.getElementById('btnLogin').dataset.label  = 'Masuk';
+    document.getElementById('btnDaftar').dataset.label = 'Buat Akun';
+
+    // ===== SWITCH TAB =====
+    window.switchTab = function(tab) {
+        clearAlerts();
+        document.getElementById('panelLogin').classList.toggle('active',  tab === 'login');
+        document.getElementById('panelDaftar').classList.toggle('active', tab === 'daftar');
+        document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
+        document.getElementById('tabDaftar').classList.toggle('active',   tab === 'daftar');
+    };
+
+    // ===== TOGGLE PASSWORD =====
+    window.togglePw = function(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        btn.textContent = isHidden ? '🙈' : '👁️';
+    };
+
+    // ===== LOGIN =====
+    window.doLogin = function() {
+        clearAlerts();
+        const email    = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email || !password) { showError('Email dan password wajib diisi.'); return; }
+
+        setLoading('btnLogin', true);
+        signInWithEmailAndPassword(auth, email, password)
+            .then(() => {
+                // onAuthStateChanged akan redirect ke index.html
+            })
+            .catch(err => {
+                setLoading('btnLogin', false);
+                const pesan = {
+                    'auth/user-not-found':  'Akun tidak ditemukan.',
+                    'auth/wrong-password':  'Password salah.',
+                    'auth/invalid-email':   'Format email tidak valid.',
+                    'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
+                    'auth/invalid-credential': 'Email atau password salah.',
+                };
+                showError(pesan[err.code] || 'Login gagal. Periksa email dan password Anda.');
+            });
+    };
+
+    // Enter key support
+    document.getElementById('loginPassword').addEventListener('keydown', e => {
+        if (e.key === 'Enter') window.doLogin();
+    });
+
+    // ===== DAFTAR =====
+    window.doDaftar = function() {
+        clearAlerts();
+        const email     = document.getElementById('daftarEmail').value.trim();
+        const password  = document.getElementById('daftarPassword').value;
+        const konfirm   = document.getElementById('daftarKonfirmasi').value;
+
+        if (!email || !password || !konfirm) { showError('Semua kolom wajib diisi.'); return; }
+        if (password.length < 6)  { showError('Password minimal 6 karakter.'); return; }
+        if (password !== konfirm) { showError('Konfirmasi password tidak cocok.'); return; }
+
+        setLoading('btnDaftar', true);
+        createUserWithEmailAndPassword(auth, email, password)
+            .then(cred => {
+                // Simpan data user ke database, isApproved = false (menunggu admin)
+                return set(ref(db, `users/${cred.user.uid}`), {
+                    email: email,
+                    isApproved: false,
+                    createdAt: Date.now()
+                });
+            })
+            .then(() => {
+                setLoading('btnDaftar', false);
+                showSuccess('Akun berhasil dibuat! Menunggu persetujuan admin sebelum bisa masuk.');
+                document.getElementById('daftarEmail').value = '';
+                document.getElementById('daftarPassword').value = '';
+                document.getElementById('daftarKonfirmasi').value = '';
+                // Logout user yang baru daftar karena belum approved
+                auth.signOut();
+            })
+            .catch(err => {
+                setLoading('btnDaftar', false);
+                const pesan = {
+                    'auth/email-already-in-use': 'Email sudah terdaftar.',
+                    'auth/invalid-email':         'Format email tidak valid.',
+                    'auth/weak-password':         'Password terlalu lemah.',
+                };
+                showError(pesan[err.code] || 'Pendaftaran gagal. Coba lagi.');
+            });
+    };
+
+    document.getElementById('daftarKonfirmasi').addEventListener('keydown', e => {
+        if (e.key === 'Enter') window.doDaftar();
+    });
+</script>
+
+</body>
+</html>
