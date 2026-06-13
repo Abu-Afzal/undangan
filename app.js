@@ -51,23 +51,45 @@ elNominal.addEventListener('input', function () {
 });
 
 // ===== AUTH =====
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
-        get(ref(db, `users/${user.uid}/isApproved`)).then(snap => {
-            if (snap.val() === true) {
+        try {
+            // Cek apakah user adalah admin (di node /admin/)
+            const adminSnap = await get(ref(db, `admin/${user.uid}`));
+            const adminData = adminSnap.val();
+            
+            if (adminData && adminData.isApproved === true) {
+                // User adalah admin
                 currentUser = user;
-                document.getElementById('userEmailAktif').textContent = user.email;
+                const emailEl = document.getElementById('userEmailAktif');
+                if (emailEl) emailEl.textContent = user.email;
+                elAreaUtama.style.display = 'block';
+                sinkronisasi();
+                return;
+            }
+            
+            // Cek apakah user adalah user biasa (di node /users/)
+            const userSnap = await get(ref(db, `users/${user.uid}`));
+            const userData = userSnap.val();
+            
+            if (userData && userData.isApproved === true) {
+                // User biasa yang disetujui
+                currentUser = user;
+                const emailEl = document.getElementById('userEmailAktif');
+                if (emailEl) emailEl.textContent = user.email;
                 elAreaUtama.style.display = 'block';
                 sinkronisasi();
             } else {
                 keLogin("Akun belum disetujui Admin.");
             }
-        }).catch(() => keLogin("Gagal mengambil data autentikasi."));
+        } catch (error) {
+            console.error("Auth error:", error);
+            keLogin("Gagal mengambil data autentikasi.");
+        }
     } else {
         keLogin();
     }
 });
-
 function keLogin(pesan = "") {
     if (pesan) alert(pesan);
     if (dbListenerRef && currentUser) off(dbListenerRef);
