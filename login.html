@@ -191,21 +191,49 @@
     const db   = getDatabase(app);
 
     // Jika sudah login, cek role lalu redirect
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
-        const snap = await get(ref(db, `users/${user.uid}`));
-        const data = snap.val();
-        if (!data) { await signOut(auth); return; }
-
-        if (data.isAdmin === true) {
+   onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        // Reset tombol jika user sign out
+        setLoading('btnLogin', false, 'Masuk');
+        return;
+    }
+    
+    try {
+        // Cek apakah user adalah admin
+        const adminSnap = await get(ref(db, `admin/${user.uid}`));
+        const adminData = adminSnap.val();
+        
+        if (adminData && adminData.isAdmin === true) {
             window.location.href = "admin.html";
-        } else if (data.isApproved === true) {
+            return;
+        }
+        
+        // Cek apakah user adalah user biasa
+        const userSnap = await get(ref(db, `users/${user.uid}`));
+        const userData = userSnap.val();
+        
+        if (!userData) {
+            await signOut(auth);
+            setLoading('btnLogin', false, 'Masuk');
+            showError("Data user tidak ditemukan. Hubungi admin.");
+            return;
+        }
+
+        if (userData.isAdmin === true) {
+            window.location.href = "admin.html";
+        } else if (userData.isApproved === true) {
             window.location.href = "index.html";
         } else {
             await signOut(auth);
+            setLoading('btnLogin', false, 'Masuk');
             showError("Akun Anda belum disetujui admin. Silakan tunggu.");
         }
-    });
+    } catch (error) {
+        console.error("Error checking user data:", error);
+        setLoading('btnLogin', false, 'Masuk');
+        showError("Gagal memuat data user. Silakan coba lagi.");
+    }
+});
 
     // ===== HELPERS =====
     function showError(msg) {
