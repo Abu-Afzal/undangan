@@ -43,102 +43,68 @@ body {
     padding: 24px 20px 60px;
 }
 
-/* HEADER - Tema Dark dengan Kop di Tengah */
+/* ===== HEADER ===== */
 .app-header {
-    background: linear-gradient(135deg, #0f1729 0%, #1a2540 50%, #0f1729 100%);
+    background: var(--navy);
+    border-radius: var(--r-lg);
     padding: 24px 30px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
     position: relative;
     overflow: hidden;
-    border-bottom: 2px solid rgba(0, 212, 170, 0.15);
 }
 
 .app-header::before {
     content: '';
     position: absolute;
-    top: -80px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(0, 212, 170, 0.08) 0%, transparent 70%);
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(0,212,170,0.16) 0%, transparent 70%);
     pointer-events: none;
 }
 
-.header-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    position: relative;
-    z-index: 1;
-}
-
-.header-kop {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.header-icon {
-    font-size: 32px;
-    width: 56px;
-    height: 56px;
-    background: rgba(0, 212, 170, 0.12);
-    border: 2px solid rgba(0, 212, 170, 0.25);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.header-title {
-    font-size: 22px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-}
-
-.header-subtitle {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
-    font-weight: 400;
-}
-
-.header-user-info {
+.header-left {
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-top: 8px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.user-email {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+.header-icon {
+    font-size: 26px;
+    width: 50px; height: 50px;
+    background: rgba(0,212,170,0.14);
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
 }
 
-.user-email strong {
-    color: #00d4aa;
-    font-weight: 600;
+.app-header h1 {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.3px;
 }
 
-.btn-logout {
-    background: rgba(240, 68, 56, 0.15);
-    border: 1px solid rgba(240, 68, 56, 0.25);
-    color: #f87171;
-    font-family: inherit;
+.app-header p {
     font-size: 12px;
-    font-weight: 700;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
+    color: rgba(255,255,255,0.42);
+    margin-top: 3px;
 }
 
-.btn-logout:hover {
-    background: rgba(240, 68, 56, 0.25);
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    flex-shrink: 0;
+}
+
+.header-right strong {
+    color: var(--teal);
 }
 
 /* ===== BUTTONS ===== */
