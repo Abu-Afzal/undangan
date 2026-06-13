@@ -251,10 +251,12 @@
 </div>
 
 <script type="module">
+    // ✅ IMPORT YANG BENAR
     import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, onAuthStateChanged, signOut, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { get as dbGet } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, get, onValue, update, remove } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBhDGXnuMIvfr-9AXCIw1zgDuJWfCgMUyE",
@@ -270,15 +272,35 @@
     const auth = getAuth(app);
     const db   = getDatabase(app);
 
-    // Guard: hanya admin yang boleh masuk
+    // Guard: cek apakah user adalah admin
     onAuthStateChanged(auth, async (user) => {
-        if (!user) { window.location.href = "login.html"; return; }
+        if (!user) { 
+            window.location.href = "login.html"; 
+            return; 
+        }
 
-        const snap = await dbGet(ref(db, `users/${user.uid}/isAdmin`));
-        if (snap.val() !== true) { window.location.href = "login.html"; return; }
+        try {
+            // Cek di node /admin/ (sesuai struktur database Anda)
+            const adminSnap = await get(ref(db, `admin/${user.uid}`));
+            const adminData = adminSnap.val();
 
-        document.getElementById('adminEmail').textContent = user.email;
-        muatSemuaUser();
+            // Jika user terdaftar di /admin/ dengan isApproved=true, anggap admin
+            const isAdmin = adminData && adminData.isApproved === true;
+
+            if (!isAdmin) { 
+                console.warn("User bukan admin:", user.email);
+                await signOut(auth);
+                window.location.href = "login.html"; 
+                return; 
+            }
+
+            document.getElementById('adminEmail').textContent = user.email;
+            muatSemuaUser();
+        } catch (error) {
+            console.error("Error checking admin status:", error);
+            await signOut(auth);
+            window.location.href = "login.html";
+        }
     });
 
     document.getElementById('btnLogout').addEventListener('click', () => {
@@ -319,6 +341,10 @@
 
             renderPending(pending);
             renderApproved(approved);
+        }, (error) => {
+            console.error("Error loading users:", error);
+            document.getElementById('loadingAwal').innerHTML = 
+                `<span style="color:var(--danger);">❌ Gagal memuat data: ${error.message}</span>`;
         });
     }
 
