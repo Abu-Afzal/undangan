@@ -29,21 +29,18 @@ let currentUser   = null;
 let dbListenerRef = null;
 
 // ===== ELEMENTS =====
-const elTabs        = document.getElementById('wadahTabs');
-const elCardGrid    = document.getElementById('cardGrid');
-const elKeyword     = document.getElementById('keywordSaring');
-const elNominal     = document.getElementById('nominalMasker');
-const elAreaUtama   = document.getElementById('areaAplikasiUtama');
-const elAreaHeader  = document.getElementById('areaHeader');
-const elKonten      = document.getElementById('kontenUtama');
-const elNoAcara     = document.getElementById('noAcara');
-const elEmpty       = document.getElementById('emptyState');
-const elCount       = document.getElementById('tableRowCount');
-const elFormPanel   = document.getElementById('formPanel');
+const elTabs      = document.getElementById('wadahTabs');
+const elBody      = document.getElementById('bodyTabel');
+const elKeyword   = document.getElementById('keywordSaring');
+const elNominal   = document.getElementById('nominalMasker');
+const elAreaUtama = document.getElementById('areaAplikasiUtama');
+const elKonten    = document.getElementById('kontenUtama');
+const elNoAcara   = document.getElementById('noAcara');
+const elCount     = document.getElementById('tableRowCount');
 
 // ===== UTILITY =====
-const formatRp  = n  => "Rp " + parseInt(n || 0).toLocaleString('id-ID');
-const escHtml   = s  => String(s)
+const formatRp = n => "Rp " + parseInt(n || 0).toLocaleString('id-ID');
+const escHtml  = s => String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -53,23 +50,14 @@ elNominal.addEventListener('input', function () {
     this.value = d ? parseInt(d).toLocaleString('id-ID') : "";
 });
 
-// ===== FORM PANEL TOGGLE =====
-document.getElementById('btnToggleForm').addEventListener('click', () => {
-    elFormPanel.style.display = elFormPanel.style.display === 'none' ? 'block' : 'none';
-});
-document.getElementById('btnTutupForm').addEventListener('click', () => {
-    elFormPanel.style.display = 'none';
-    document.getElementById('formCatatan').reset();
-});
-
 // ===== AUTH =====
 onAuthStateChanged(auth, (user) => {
     if (user) {
         get(ref(db, `users/${user.uid}/isApproved`)).then(snap => {
             if (snap.val() === true) {
                 currentUser = user;
+                document.getElementById('userEmailAktif').textContent = user.email;
                 elAreaUtama.style.display = 'block';
-                elAreaHeader.style.display = 'flex';
                 sinkronisasi();
             } else {
                 keLogin("Akun belum disetujui Admin.");
@@ -91,7 +79,7 @@ document.getElementById('btnLogout').addEventListener('click', () => {
     keLogin();
 });
 
-// ===== SINKRONISASI =====
+// ===== SINKRONISASI REALTIME =====
 function sinkronisasi() {
     dbListenerRef = ref(db, `users/${currentUser.uid}/masterAcara`);
     onValue(dbListenerRef, snap => {
@@ -106,17 +94,17 @@ function sinkronisasi() {
         }
 
         renderTabs();
-        renderCards();
+        renderData();
     });
 }
 
-// ===== RENDER TABS =====
+// ===== RENDER TAB PILLS =====
 function renderTabs() {
     elTabs.innerHTML = "";
     const keys = Object.keys(masterAcara);
 
     if (keys.length === 0) {
-        elTabs.innerHTML = `<span style="font-size:13px;color:#9aa5b4;font-style:italic;padding:6px 4px;">Belum ada acara.</span>`;
+        elTabs.innerHTML = `<span class="tabs-empty">Belum ada acara. Buat acara baru di atas.</span>`;
         elKonten.style.display  = 'none';
         elNoAcara.style.display = 'block';
         setLabelAcara('');
@@ -158,7 +146,7 @@ function renderTabs() {
             localStorage.setItem('idAcaraAktif', idAcaraAktif);
             elKeyword.value = "";
             renderTabs();
-            renderCards();
+            renderData();
         });
 
         elTabs.appendChild(pill);
@@ -174,7 +162,7 @@ function setLabelAcara(nama) {
 }
 
 // ===== TAMBAH ACARA =====
-document.getElementById('formAcara').addEventListener('submit', function(e) {
+document.getElementById('formAcara').addEventListener('submit', function (e) {
     e.preventDefault();
     const input = document.getElementById('namaAcaraBaru');
     const nama  = input.value.trim();
@@ -186,10 +174,9 @@ document.getElementById('formAcara').addEventListener('submit', function(e) {
     set(newRef, { namaAcara: nama, dataTamu: "" }).then(() => input.value = "");
 });
 
-// ===== RENDER CARDS =====
-function renderCards() {
-    elCardGrid.innerHTML = "";
-
+// ===== RENDER DATA TAMU =====
+function renderData() {
+    elBody.innerHTML = "";
     if (!idAcaraAktif || !masterAcara[idAcaraAktif]) return;
 
     const objekTamu = masterAcara[idAcaraAktif].dataTamu || {};
@@ -204,71 +191,66 @@ function renderCards() {
         t.asal.toLowerCase().includes(keyword)
     );
 
-    // Update count
     if (elCount) {
         elCount.textContent = keyword
             ? `${disaring.length} dari ${arrayTamu.length} tamu`
             : `${arrayTamu.length} tamu`;
     }
 
-    // Empty state
     if (disaring.length === 0) {
-        elEmpty.style.display = 'block';
-        elCardGrid.style.display = 'none';
-        document.getElementById('emptyEmoji').textContent = keyword ? '🔍' : '📭';
-        document.getElementById('emptyMsg').textContent   = keyword ? 'Tidak ada hasil' : 'Belum ada catatan tamu';
-        document.getElementById('emptySub').textContent   = keyword
-            ? `Tidak ada tamu dengan kata kunci "${elKeyword.value}"`
-            : 'Klik "＋ Tambah Tamu" untuk mulai mencatat';
-    } else {
-        elEmpty.style.display = 'none';
-        elCardGrid.style.display = 'grid';
+        const s = keyword
+            ? { emoji:'🔍', msg:'Tidak ada hasil pencarian', sub:`Tidak ada tamu dengan kata kunci "${elKeyword.value}"` }
+            : { emoji:'📭', msg:'Belum ada catatan tamu', sub:'Tambahkan tamu menggunakan form di atas' };
 
-        disaring.forEach((tamu, i) => {
-            const card = document.createElement('div');
-            card.className = 'tamu-card';
-
-            card.innerHTML = `
-                <div class="card-no">#${i + 1}</div>
-                <div class="card-nama">${escHtml(tamu.nama)}</div>
-                <div class="card-asal">📍 ${escHtml(tamu.asal)}</div>
-                <div class="card-nominal">${formatRp(tamu.nominal)}</div>
-                <div class="card-footer"></div>
-            `;
-
-            const footer = card.querySelector('.card-footer');
-
-            // Badge toggle status
-            const badge = document.createElement('button');
-            badge.className = `status-badge ${tamu.sudahKembali ? 'status-sudah' : 'status-belum'}`;
-            badge.innerHTML = tamu.sudahKembali ? '✓ Sudah Dibalas' : '⏳ Belum Dibalas';
-            badge.title = 'Klik untuk ubah status';
-            badge.addEventListener('click', () => {
-                update(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu/${tamu.id}`), {
-                    sudahKembali: !tamu.sudahKembali
-                });
-            });
-
-            // Hapus
-            const del = document.createElement('button');
-            del.className   = 'card-del';
-            del.textContent = 'Hapus';
-            del.addEventListener('click', () => {
-                if (confirm(`Hapus catatan tamu "${tamu.nama}"?`)) {
-                    remove(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu/${tamu.id}`));
-                }
-            });
-
-            footer.appendChild(badge);
-            footer.appendChild(del);
-            elCardGrid.appendChild(card);
-        });
+        elBody.innerHTML = `
+            <tr><td colspan="6" class="state-cell">
+                <span class="state-emoji">${s.emoji}</span>
+                <div class="state-msg">${s.msg}</div>
+                <div class="state-sub">${s.sub}</div>
+            </td></tr>`;
+        updateStatistik(arrayTamu);
+        return;
     }
+
+    disaring.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="td-no">${i + 1}</td>
+            <td class="td-nama">${escHtml(t.nama)}</td>
+            <td class="td-asal">${escHtml(t.asal)}</td>
+            <td class="td-nominal">${formatRp(t.nominal)}</td>
+            <td></td>
+            <td></td>
+        `;
+
+        const badge = document.createElement('button');
+        badge.className = `status-badge ${t.sudahKembali ? 'status-sudah' : 'status-belum'}`;
+        badge.innerHTML = t.sudahKembali ? '✓ Sudah Dibalas' : '⏳ Belum Dibalas';
+        badge.title = 'Klik untuk ubah status';
+        badge.addEventListener('click', () => {
+            update(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu/${t.id}`), {
+                sudahKembali: !t.sudahKembali
+            });
+        });
+        tr.cells[4].appendChild(badge);
+
+        const del = document.createElement('button');
+        del.className = 'btn-delete';
+        del.textContent = 'Hapus';
+        del.addEventListener('click', () => {
+            if (confirm(`Hapus catatan tamu "${t.nama}"?`)) {
+                remove(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu/${t.id}`));
+            }
+        });
+        tr.cells[5].appendChild(del);
+
+        elBody.appendChild(tr);
+    });
 
     updateStatistik(arrayTamu);
 }
 
-elKeyword.addEventListener('keyup', renderCards);
+elKeyword.addEventListener('keyup', renderData);
 
 // ===== STATISTIK =====
 function updateStatistik(arr) {
@@ -280,7 +262,7 @@ function updateStatistik(arr) {
 }
 
 // ===== TAMBAH TAMU =====
-document.getElementById('formCatatan').addEventListener('submit', function(e) {
+document.getElementById('formCatatan').addEventListener('submit', function (e) {
     e.preventDefault();
     if (!idAcaraAktif) return;
 
@@ -292,8 +274,5 @@ document.getElementById('formCatatan').addEventListener('submit', function(e) {
 
     const newRef = push(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu`));
     set(newRef, { nama, asal, nominal, sudahKembali: false, timestamp: Date.now() })
-        .then(() => {
-            this.reset();
-            elFormPanel.style.display = 'none';
-        });
+        .then(() => this.reset());
 });
