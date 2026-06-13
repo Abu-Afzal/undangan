@@ -11,20 +11,21 @@
 <div class="app-wrapper">
 
     <!-- ===== HEADER ===== -->
-    <header class="app-header">
-        <div class="header-left">
-            <div class="header-icon">📩</div>
+   <header class="app-header">
+    <div class="header-content">
+        <div class="header-kop">
+            <div class="header-icon"></div>
             <div>
-                <h1>Catatan Undangan Digital</h1>
-                <p>Pencatatan & pencarian cepat tamu undangan berbasis cloud</p>
+                <div class="header-title">Catatan Undangan Digital</div>
+                <div class="header-subtitle">Pencatatan & pencarian cepat tamu undangan berbasis cloud</div>
             </div>
         </div>
-        <div class="header-right">
-            <div>Akun aktif: <strong id="userEmailAktif">Mengecek sesi…</strong></div>
-            <button type="button" class="btn btn-danger" id="btnLogout">Keluar</button>
+        <div class="header-user-info">
+            <span class="user-email">Akun aktif: <strong id="userEmail">Memuat...</strong></span>
+            <button class="btn-logout" id="btnLogout">Keluar</button>
         </div>
-        <div id="statusKoneksi" style="display:none;"></div>
-    </header>
+    </div>
+</header>
 
     <!-- ===== AREA UTAMA ===== -->
     <div id="areaAplikasiUtama" style="display:none;">
