@@ -105,11 +105,62 @@
                 </div>
             </div>
 
-            <!-- Search Bar -->
-            <div class="search-bar">
-                <span class="search-ico">🔍</span>
-                <input type="text" id="keywordSaring" class="search-input"
-                    placeholder="Cari nama tamu atau asal daerah secara instan…">
+            <!-- Search Bar + Toolbar Import/Ekspor -->
+            <div class="toolbar-row">
+                <div class="search-bar">
+                    <span class="search-ico">🔍</span>
+                    <input type="text" id="keywordSaring" class="search-input"
+                        placeholder="Cari nama tamu atau asal daerah secara instan…">
+                </div>
+                <div class="toolbar-actions">
+                    <button type="button" class="btn btn-outline" id="btnImport" title="Import dari Excel">
+                        📥 Import
+                    </button>
+                    <button type="button" class="btn btn-outline" id="btnEkspor" title="Ekspor ke Excel">
+                        📤 Ekspor
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Import -->
+            <div class="modal-overlay" id="modalImport" style="display:none;">
+                <div class="modal-box">
+                    <div class="modal-header">
+                        <div class="modal-title">📥 Import Data dari Excel</div>
+                        <button type="button" class="modal-close" id="btnTutupModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="import-info">
+                            <strong>Format kolom yang diperlukan:</strong>
+                            <div class="import-cols">
+                                <span class="col-badge">Nama</span>
+                                <span class="col-badge">Asal</span>
+                                <span class="col-badge">Nominal</span>
+                                <span class="col-badge col-opt">Status (opsional)</span>
+                            </div>
+                            <p>Baris pertama = header kolom. Nominal diisi angka saja (tanpa Rp/titik).</p>
+                        </div>
+                        <a href="#" id="linkUnduhTemplate" class="btn-template">⬇ Unduh Template Excel</a>
+                        <div class="dropzone" id="dropzone">
+                            <div class="dropzone-icon">📂</div>
+                            <div class="dropzone-text">Seret file Excel ke sini</div>
+                            <div class="dropzone-sub">atau</div>
+                            <label class="btn" style="cursor:pointer;">
+                                Pilih File
+                                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+                            </label>
+                            <div class="dropzone-note">.xlsx / .xls / .csv</div>
+                        </div>
+                        <div id="previewArea" style="display:none;">
+                            <div class="preview-info" id="previewInfo"></div>
+                            <div class="preview-scroll" id="previewTable"></div>
+                            <div class="import-actions">
+                                <button type="button" class="btn" id="btnKonfirmasiImport">✓ Import Sekarang</button>
+                                <button type="button" class="btn btn-outline" id="btnBatalImport">Batal</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tabel -->
@@ -154,6 +205,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
