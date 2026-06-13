@@ -276,3 +276,219 @@ document.getElementById('formCatatan').addEventListener('submit', function (e) {
     set(newRef, { nama, asal, nominal, sudahKembali: false, timestamp: Date.now() })
         .then(() => this.reset());
 });
+
+// ===================================================
+// ===== EKSPOR & IMPORT EXCEL (SheetJS) =====
+// ===================================================
+
+// ===== EKSPOR =====
+document.getElementById('btnEkspor').addEventListener('click', () => {
+    if (!idAcaraAktif || !masterAcara[idAcaraAktif]) {
+        alert('Pilih acara terlebih dahulu.'); return;
+    }
+
+    const namaAcara = masterAcara[idAcaraAktif].namaAcara;
+    const objekTamu = masterAcara[idAcaraAktif].dataTamu || {};
+
+    const arrayTamu = Object.values(objekTamu).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+    if (arrayTamu.length === 0) {
+        alert('Belum ada data tamu untuk diekspor.'); return;
+    }
+
+    // Susun data rows
+    const rows = arrayTamu.map((t, i) => ({
+        'No':           i + 1,
+        'Nama':         t.nama || '',
+        'Asal':         t.asal || '',
+        'Nominal':      t.nominal || 0,
+        'Status Balas': t.sudahKembali ? 'Sudah Dibalas' : 'Belum Dibalas',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Atur lebar kolom
+    ws['!cols'] = [
+        { wch: 5  },  // No
+        { wch: 30 },  // Nama
+        { wch: 25 },  // Asal
+        { wch: 15 },  // Nominal
+        { wch: 18 },  // Status
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, namaAcara.substring(0, 31));
+
+    const tgl = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Data_Tamu_${namaAcara}_${tgl}.xlsx`);
+});
+
+// ===== TEMPLATE DOWNLOAD =====
+document.getElementById('linkUnduhTemplate').addEventListener('click', (e) => {
+    e.preventDefault();
+
+    const contoh = [
+        { 'Nama': 'Abu Afzal',    'Asal': 'Bantaeng',  'Nominal': 200000, 'Status': 'Belum Dibalas' },
+        { 'Nama': 'Siti Aminah',  'Asal': 'Makassar',  'Nominal': 150000, 'Status': 'Sudah Dibalas' },
+        { 'Nama': 'Budi Santoso', 'Asal': 'Gowa',      'Nominal': 100000, 'Status': 'Belum Dibalas' },
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(contoh);
+    ws['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'Template_Import_Tamu.xlsx');
+});
+
+// ===== MODAL IMPORT =====
+const modalImport = document.getElementById('modalImport');
+let dataImportSiap = [];
+
+document.getElementById('btnImport').addEventListener('click', () => {
+    if (!idAcaraAktif) { alert('Pilih acara terlebih dahulu.'); return; }
+    modalImport.style.display = 'flex';
+    resetModalImport();
+});
+
+document.getElementById('btnTutupModal').addEventListener('click', tutupModal);
+document.getElementById('btnBatalImport').addEventListener('click', resetModalImport);
+
+modalImport.addEventListener('click', (e) => {
+    if (e.target === modalImport) tutupModal();
+});
+
+function tutupModal() {
+    modalImport.style.display = 'none';
+    resetModalImport();
+}
+
+function resetModalImport() {
+    dataImportSiap = [];
+    document.getElementById('previewArea').style.display  = 'none';
+    document.getElementById('dropzone').style.display     = 'flex';
+    document.getElementById('fileInput').value            = '';
+    document.getElementById('previewTable').innerHTML     = '';
+    document.getElementById('previewInfo').innerHTML      = '';
+}
+
+// File input
+document.getElementById('fileInput').addEventListener('change', function () {
+    if (this.files[0]) prosesFile(this.files[0]);
+});
+
+// Drag & drop
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) prosesFile(file);
+});
+
+// Proses file Excel → preview
+function prosesFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const wb   = XLSX.read(e.target.result, { type: 'array' });
+            const ws   = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+            if (rows.length === 0) { alert('File kosong atau format tidak dikenali.'); return; }
+
+            // Normalisasi kolom (case-insensitive)
+            dataImportSiap = rows.map(row => {
+                const keys = Object.keys(row);
+                const cari = (label) => {
+                    const k = keys.find(k => k.toLowerCase().includes(label));
+                    return k ? String(row[k]).trim() : '';
+                };
+
+                const nama    = cari('nama');
+                const asal    = cari('asal');
+                const nomRaw  = cari('nominal');
+                const nominal = parseInt(String(nomRaw).replace(/[^\d]/g, '')) || 0;
+                const status  = cari('status');
+                const sudahKembali = status.toLowerCase().includes('sudah');
+
+                return { nama, asal, nominal, sudahKembali };
+            }).filter(t => t.nama && t.asal);
+
+            if (dataImportSiap.length === 0) {
+                alert('Tidak ada baris valid. Pastikan kolom Nama dan Asal terisi.'); return;
+            }
+
+            tampilkanPreview(dataImportSiap);
+        } catch (err) {
+            alert('Gagal membaca file. Pastikan format .xlsx / .xls / .csv yang valid.');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function tampilkanPreview(data) {
+    document.getElementById('dropzone').style.display    = 'none';
+    document.getElementById('previewArea').style.display = 'block';
+
+    const namaAcara = masterAcara[idAcaraAktif]?.namaAcara || '';
+    document.getElementById('previewInfo').innerHTML =
+        `Ditemukan <strong>${data.length} baris</strong> siap diimport ke acara <strong>${escHtml(namaAcara)}</strong>`;
+
+    // Tabel preview (max 5 baris)
+    const preview = data.slice(0, 5);
+    let html = `<table><thead><tr>
+        <th>#</th><th>Nama</th><th>Asal</th><th>Nominal</th><th>Status</th>
+    </tr></thead><tbody>`;
+
+    preview.forEach((t, i) => {
+        html += `<tr>
+            <td>${i + 1}</td>
+            <td>${escHtml(t.nama)}</td>
+            <td>${escHtml(t.asal)}</td>
+            <td>${formatRp(t.nominal)}</td>
+            <td>${t.sudahKembali ? '✓ Sudah' : '⏳ Belum'}</td>
+        </tr>`;
+    });
+
+    if (data.length > 5) {
+        html += `<tr><td colspan="5" style="text-align:center;color:#9aa5b4;font-style:italic;padding:8px;">
+            ... dan ${data.length - 5} baris lainnya
+        </td></tr>`;
+    }
+
+    html += '</tbody></table>';
+    document.getElementById('previewTable').innerHTML = html;
+}
+
+// Konfirmasi import → simpan ke Firebase
+document.getElementById('btnKonfirmasiImport').addEventListener('click', async () => {
+    if (!dataImportSiap.length || !idAcaraAktif) return;
+
+    const btn = document.getElementById('btnKonfirmasiImport');
+    btn.disabled = true;
+    btn.textContent = 'Mengimport…';
+
+    try {
+        const promises = dataImportSiap.map(t => {
+            const newRef = push(ref(db, `users/${currentUser.uid}/masterAcara/${idAcaraAktif}/dataTamu`));
+            return set(newRef, {
+                nama: t.nama,
+                asal: t.asal,
+                nominal: t.nominal,
+                sudahKembali: t.sudahKembali,
+                timestamp: Date.now()
+            });
+        });
+
+        await Promise.all(promises);
+        tutupModal();
+        alert(`✅ Berhasil mengimport ${dataImportSiap.length} data tamu!`);
+    } catch (err) {
+        alert('Gagal mengimport data. Coba lagi.');
+        btn.disabled = false;
+        btn.textContent = '✓ Import Sekarang';
+    }
+});
