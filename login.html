@@ -106,6 +106,37 @@
         @keyframes spin { to { transform:rotate(360deg); } }
         .auth-panel { display:none; }
         .auth-panel.active { display:block; }
+
+        /* Lupa password link */
+        .lupa-pw-link {
+            display:inline-block; margin-top:12px;
+            font-size:12.5px; color:var(--teal-dark);
+            cursor:pointer; text-decoration:underline;
+            background:none; border:none; font-family:inherit;
+            padding:0;
+        }
+        .lupa-pw-link:hover { color:var(--navy); }
+
+        /* Panel lupa password */
+        .reset-panel {
+            display:none;
+            animation: fadeIn 0.2s ease;
+        }
+        .reset-panel.show { display:block; }
+
+        .back-link {
+            display:inline-flex; align-items:center; gap:5px;
+            font-size:12.5px; color:var(--text-3);
+            cursor:pointer; background:none; border:none;
+            font-family:inherit; padding:0; margin-bottom:18px;
+            transition:color 0.15s;
+        }
+        .back-link:hover { color:var(--text-1); }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform:translateY(-6px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
         @media (max-width:460px) { .login-card { padding:30px 22px; } }
     </style>
 </head>
@@ -139,7 +170,25 @@
             </div>
         </div>
         <button class="btn-submit" id="btnLogin" onclick="doLogin()">Masuk</button>
-        <div class="login-note">Lupa password? Hubungi admin untuk reset akun Anda.</div>
+        <div style="text-align:center;">
+            <button class="lupa-pw-link" onclick="showResetPanel()">Lupa password?</button>
+        </div>
+    </div>
+
+    <!-- Panel Reset Password -->
+    <div class="reset-panel" id="resetPanel">
+        <button class="back-link" onclick="hideResetPanel()">← Kembali ke login</button>
+        <div class="form-group">
+            <label>Email Akun Anda</label>
+            <input type="email" id="resetEmail" class="form-control"
+                placeholder="contoh@email.com">
+        </div>
+        <button class="btn-submit" id="btnReset" onclick="doReset()">
+            Kirim Link Reset
+        </button>
+        <div class="login-note" style="margin-top:14px;">
+            Link reset password akan dikirim ke email Anda oleh Firebase. Cek folder inbox atau spam.
+        </div>
     </div>
 
     <!-- Panel Daftar -->
@@ -173,7 +222,8 @@
     import {
         getAuth, onAuthStateChanged, signOut,
         signInWithEmailAndPassword,
-        createUserWithEmailAndPassword
+        createUserWithEmailAndPassword,
+        sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -191,49 +241,21 @@
     const db   = getDatabase(app);
 
     // Jika sudah login, cek role lalu redirect
-   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        // Reset tombol jika user sign out
-        setLoading('btnLogin', false, 'Masuk');
-        return;
-    }
-    
-    try {
-        // Cek apakah user adalah admin
-        const adminSnap = await get(ref(db, `admin/${user.uid}`));
-        const adminData = adminSnap.val();
-        
-        if (adminData && adminData.isAdmin === true) {
-            window.location.href = "admin.html";
-            return;
-        }
-        
-        // Cek apakah user adalah user biasa
-        const userSnap = await get(ref(db, `users/${user.uid}`));
-        const userData = userSnap.val();
-        
-        if (!userData) {
-            await signOut(auth);
-            setLoading('btnLogin', false, 'Masuk');
-            showError("Data user tidak ditemukan. Hubungi admin.");
-            return;
-        }
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        const snap = await get(ref(db, `users/${user.uid}`));
+        const data = snap.val();
+        if (!data) { await signOut(auth); return; }
 
-        if (userData.isAdmin === true) {
+        if (data.isAdmin === true) {
             window.location.href = "admin.html";
-        } else if (userData.isApproved === true) {
+        } else if (data.isApproved === true) {
             window.location.href = "index.html";
         } else {
             await signOut(auth);
-            setLoading('btnLogin', false, 'Masuk');
             showError("Akun Anda belum disetujui admin. Silakan tunggu.");
         }
-    } catch (error) {
-        console.error("Error checking user data:", error);
-        setLoading('btnLogin', false, 'Masuk');
-        showError("Gagal memuat data user. Silakan coba lagi.");
-    }
-});
+    });
 
     // ===== HELPERS =====
     function showError(msg) {
@@ -338,6 +360,49 @@
 
     document.getElementById('daftarKonfirmasi').addEventListener('keydown', e => {
         if (e.key === 'Enter') window.doDaftar();
+    });
+
+    // ===== SHOW / HIDE RESET PANEL =====
+    window.showResetPanel = () => {
+        clearAlerts();
+        document.getElementById('panelLogin').classList.remove('active');
+        document.getElementById('resetPanel').classList.add('show');
+        // Salin email dari field login jika sudah diisi
+        const email = document.getElementById('loginEmail').value.trim();
+        if (email) document.getElementById('resetEmail').value = email;
+    };
+
+    window.hideResetPanel = () => {
+        clearAlerts();
+        document.getElementById('resetPanel').classList.remove('show');
+        document.getElementById('panelLogin').classList.add('active');
+    };
+
+    // ===== RESET PASSWORD =====
+    window.doReset = async () => {
+        clearAlerts();
+        const email = document.getElementById('resetEmail').value.trim();
+        if (!email) { showError('Masukkan email akun Anda terlebih dahulu.'); return; }
+
+        setLoading('btnReset', true, 'Kirim Link Reset');
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setLoading('btnReset', false, 'Kirim Link Reset');
+            showSuccess(`Link reset password telah dikirim ke ${email}. Cek inbox atau folder spam Anda.`);
+            document.getElementById('resetEmail').value = '';
+        } catch (err) {
+            setLoading('btnReset', false, 'Kirim Link Reset');
+            const pesan = {
+                'auth/user-not-found': 'Email tidak terdaftar.',
+                'auth/invalid-email':  'Format email tidak valid.',
+                'auth/too-many-requests': 'Terlalu banyak permintaan. Coba lagi nanti.',
+            };
+            showError(pesan[err.code] || 'Gagal mengirim email reset. Coba lagi.');
+        }
+    };
+
+    document.getElementById('resetEmail').addEventListener('keydown', e => {
+        if (e.key === 'Enter') window.doReset();
     });
 </script>
 </body>
