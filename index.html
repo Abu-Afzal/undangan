@@ -19,22 +19,9 @@
                 <p>Pencatatan & pencarian cepat tamu undangan berbasis cloud</p>
             </div>
         </div>
-        <div class="header-right" id="areaHeader" style="display:none;">
-            <div class="stat-chip">
-                <span class="chip-label">Dana</span>
-                <span class="chip-val" id="totalDana">Rp 0</span>
-            </div>
-            <div class="stat-chip">
-                <span class="chip-label">Tamu</span>
-                <span class="chip-val" id="totalTamu">0</span>
-            </div>
-            <div class="stat-chip warn">
-                <span class="chip-label">Belum Balas</span>
-                <span class="chip-val" id="totalBelum">0</span>
-            </div>
-            <button type="button" class="btn-logout" id="btnLogout">
-                Keluar
-            </button>
+        <div class="header-right">
+            <div>Akun aktif: <strong id="userEmailAktif">Mengecek sesi…</strong></div>
+            <button type="button" class="btn btn-danger" id="btnLogout">Keluar</button>
         </div>
         <div id="statusKoneksi" style="display:none;"></div>
     </header>
@@ -44,80 +31,131 @@
 
         <!-- Tab Acara -->
         <div class="acara-bar">
-            <div class="tabs-scroll" id="wadahTabs"></div>
-            <form class="form-acara" id="formAcara">
-                <input type="text" id="namaAcaraBaru" class="input-acara"
-                    placeholder="Nama acara baru…" required>
-                <button type="submit" class="btn btn-sm">＋ Acara</button>
-            </form>
-        </div>
-
-        <!-- Konten utama -->
-        <div id="kontenUtama" style="display:none;">
-
-            <!-- Toolbar: search + tambah -->
-            <div class="toolbar">
-                <div class="search-wrap">
-                    <span class="search-ico">🔍</span>
-                    <input type="text" id="keywordSaring" class="search-input"
-                        placeholder="Cari nama atau asal daerah…">
-                </div>
-                <button type="button" class="btn" id="btnToggleForm">＋ Tambah Tamu</button>
-            </div>
-
-            <!-- Form tambah (collapsible) -->
-            <div class="form-panel" id="formPanel" style="display:none;">
-                <form id="formCatatan" class="form-inline">
-                    <div class="fgroup">
-                        <label>Nama Tamu</label>
-                        <input type="text" id="namaTamu" class="finput"
-                            placeholder="Contoh: Abu Afzal" required>
-                    </div>
-                    <div class="fgroup">
-                        <label>Asal / Alamat</label>
-                        <input type="text" id="asalTamu" class="finput"
-                            placeholder="Contoh: Lamanda" required>
-                    </div>
-                    <div class="fgroup">
-                        <label>Nominal (Rp)</label>
-                        <input type="text" id="nominalMasker" class="finput"
-                            placeholder="Contoh: 100.000" required>
-                    </div>
-                    <button type="submit" class="btn">Simpan</button>
-                    <button type="button" class="btn btn-ghost" id="btnTutupForm">Batal</button>
+            <div class="acara-bar-top">
+                <span class="acara-label">📁 Daftar Acara / Hajatan</span>
+                <form class="form-acara" id="formAcara">
+                    <input type="text" id="namaAcaraBaru" class="form-control"
+                        placeholder="Nama acara baru… (cth: Pernikahan Fulan)" required>
+                    <button type="submit" class="btn">+ Acara</button>
                 </form>
             </div>
+            <div class="tabs-scroll" id="wadahTabs"></div>
+        </div>
 
-            <!-- Info bar -->
-            <div class="info-bar">
-                <span class="info-acara">
-                    📋 <strong class="label-acara-aktif"></strong>
-                </span>
-                <span class="info-count" id="tableRowCount"></span>
+        <!-- Konten Utama -->
+        <div id="kontenUtama" style="display:none;">
+
+            <!-- Grid: Form + Statistik -->
+            <div class="main-grid">
+
+                <!-- Form Tambah Tamu -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="card-icon">✍️</span>
+                        Tambah Catatan Amplop
+                    </div>
+                    <form id="formCatatan">
+                        <div class="form-group">
+                            <label for="namaTamu">Nama Tamu Undangan</label>
+                            <input type="text" id="namaTamu" class="form-control"
+                                placeholder="Contoh: Abu Afzal" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="asalTamu">Asal / Alamat</label>
+                            <input type="text" id="asalTamu" class="form-control"
+                                placeholder="Contoh: Lamanda" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nominalMasker">Nominal Amplop (Rp)</label>
+                            <input type="text" id="nominalMasker" class="form-control"
+                                placeholder="Contoh: 100.000" required>
+                        </div>
+                        <button type="submit" class="btn btn-block">Simpan Catatan</button>
+                    </form>
+                </div>
+
+                <!-- Statistik -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="card-icon">📊</span>
+                        Ringkasan — <span class="label-acara-aktif acara-name-badge"></span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item stat-teal">
+                            <div>
+                                <div class="stat-label">Total Dana Terkumpul</div>
+                                <div class="stat-value" id="totalDana">Rp 0</div>
+                            </div>
+                            <span class="stat-ico">💰</span>
+                        </div>
+                        <div class="stat-item stat-indigo">
+                            <div>
+                                <div class="stat-label">Total Tamu Tercatat</div>
+                                <div class="stat-value" id="totalTamu">0</div>
+                                <div class="stat-sub">orang</div>
+                            </div>
+                            <span class="stat-ico">👥</span>
+                        </div>
+                        <div class="stat-item stat-amber">
+                            <div>
+                                <div class="stat-label">Belum Dibalas</div>
+                                <div class="stat-value" id="totalBelum">0</div>
+                                <div class="stat-sub">orang</div>
+                            </div>
+                            <span class="stat-ico">⏳</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Card Grid -->
-            <div class="card-grid" id="cardGrid"></div>
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <span class="search-ico">🔍</span>
+                <input type="text" id="keywordSaring" class="search-input"
+                    placeholder="Cari nama tamu atau asal daerah secara instan…">
+            </div>
 
-            <!-- Empty state -->
-            <div class="empty-state" id="emptyState" style="display:none;">
-                <div class="empty-emoji" id="emptyEmoji">📭</div>
-                <div class="empty-msg"  id="emptyMsg">Belum ada catatan tamu</div>
-                <div class="empty-sub"  id="emptySub">Klik "＋ Tambah Tamu" untuk mulai mencatat</div>
+            <!-- Tabel -->
+            <div class="table-wrap">
+                <div class="table-header-bar">
+                    <span>Data Tamu — <span class="label-acara-aktif"></span></span>
+                    <span class="table-count" id="tableRowCount"></span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:4%">#</th>
+                                <th style="width:28%">Nama Tamu</th>
+                                <th style="width:28%">Asal / Alamat</th>
+                                <th style="width:16%">Nominal</th>
+                                <th style="width:16%">Status Balas</th>
+                                <th style="width:8%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyTabel">
+                            <tr>
+                                <td colspan="6" class="state-cell">
+                                    <span class="loading-spinner"></span> Memuat data dari cloud…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div><!-- /kontenUtama -->
 
         <!-- Jika belum ada acara -->
-        <div id="noAcara" class="no-acara" style="display:none;">
-            <div class="no-acara-emoji">🗂️</div>
-            <div class="no-acara-msg">Belum ada acara</div>
-            <div class="no-acara-sub">Buat acara pertama menggunakan form di atas</div>
+        <div id="noAcara" style="display:none;" class="empty-page">
+            <div class="empty-emoji">🗂️</div>
+            <div class="empty-msg">Belum ada acara</div>
+            <div class="empty-sub">Buat acara pertama menggunakan form di atas</div>
         </div>
 
     </div><!-- /areaAplikasiUtama -->
 
-</div><!-- /app-wrapper -->
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
