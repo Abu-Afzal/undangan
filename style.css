@@ -3,8 +3,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-    --navy:       #0f1729;
-    --navy-soft:  #1a2540;
+    --navy:       #1e3a5f;
+    --navy-soft:  #254e7e;
     --teal:       #00d4aa;
     --teal-dark:  #00b890;
     --teal-muted: rgba(0,212,170,0.11);
@@ -50,11 +50,12 @@ body {
     padding: 24px 30px;
     margin-bottom: 16px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     position: relative;
     overflow: hidden;
+    text-align: center;
 }
 
 .app-header::before {
@@ -69,6 +70,7 @@ body {
 .header-left {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 16px;
 }
 
@@ -97,6 +99,7 @@ body {
 .header-right {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 14px;
     font-size: 13px;
     color: rgba(255,255,255,0.55);
