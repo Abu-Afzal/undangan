@@ -45,55 +45,38 @@ body {
 
 /* ===== HEADER ===== */
 .app-header {
-    background: var(--navy);
-    border-radius: var(--r-lg);
-    padding: 24px 30px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 12px;
+    padding: 25px;
     margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
     position: relative;
     overflow: hidden;
-    text-align: center;
-}
-
-.app-header::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 240px; height: 240px;
-    background: radial-gradient(circle, rgba(0,212,170,0.16) 0%, transparent 70%);
-    pointer-events: none;
 }
 
 .header-left {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
+    gap: 6px;
 }
 
 .header-icon {
-    font-size: 26px;
-    width: 50px; height: 50px;
-    background: rgba(0,212,170,0.14);
-    border-radius: 13px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    display: none;
 }
 
 .app-header h1 {
-    font-size: 19px;
+    font-size: 24px;
     font-weight: 800;
-    color: var(--white);
-    letter-spacing: -0.3px;
+    color: white;
+    margin-bottom: 5px;
 }
 
 .app-header p {
-    font-size: 12px;
-    color: rgba(255,255,255,0.42);
-    margin-top: 3px;
+    font-size: 14px;
+    color: white;
+    opacity: 0.9;
 }
 
 .header-right {
@@ -102,8 +85,8 @@ body {
     justify-content: center;
     gap: 14px;
     font-size: 13px;
-    color: rgba(255,255,255,0.55);
-    flex-shrink: 0;
+    color: rgba(255,255,255,0.85);
+    margin-top: 10px;
 }
 
 .header-right strong {
